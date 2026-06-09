@@ -4,7 +4,6 @@ import { bookProps } from '../page';
 import AiThumbnailGenerator from '../genthum/AiThumbnailGenerator';
 import { Sparkles, Palette } from 'lucide-react';
 import { pb } from '../lib/pocketbase';
-import { OpenAI } from 'openai';
 
 interface MutationLike<T>{
   mutate: (args: T) => void;
@@ -65,31 +64,37 @@ export default function BookDetailView({
     setStreamedReview("");
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_LLM_API_KEY;
-      const openai = new OpenAI({
-        apiKey,
-        dangerouslyAllowBrowser: true, 
-        baseURL: "https://api.upstage.ai/v1"
-      });
-
       const isAdvanced = (selectedBook.contents?.length || 0) > 300;
 
-      const chatCompletion = await openai.chat.completions.create({
-        model: "solar-pro3",
-        messages: [
-          { role: "system", content: "당신은 도서 큐레이터입니다. 주어진 책 정보를 바탕으로 핵심을 3~4문장으로 요약하고, 독자의 흥미를 유발하는 리뷰를 작성해주세요." },
-          { role: "user", content: `책 제목: ${selectedBook.title}\n저자: ${selectedBook.author}\n책 소개: ${selectedBook.contents || '내용 없음'}` }
-        ],
-        temperature: 0.3, 
-        top_p: isAdvanced ? 0.8 : 0.5,
-        stream: true
+      // 수정_Antigravity_3 클라이언트 키 노출을 방지하기 위해 서버 측 엔드포인트(/api/review)로 요청을 전달하여 GPT-4o-mini 호출 처리
+      const response = await fetch('/api/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: selectedBook.title,
+          author: selectedBook.author,
+          contents: selectedBook.contents,
+          isAdvanced,
+        }),
       });
 
+      if (!response.ok) {
+        throw new Error('AI 리뷰 생성 요청 실패');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('ReadableStream을 지원하지 않는 브라우저입니다.');
+
+      const decoder = new TextDecoder();
       let fullReview = "";
 
-      for await (const chunk of chatCompletion) {
-        const content = chunk.choices[0]?.delta?.content || "";
-        fullReview += content;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const text = decoder.decode(value, { stream: true });
+        fullReview += text;
         setStreamedReview(fullReview);
       }
 
@@ -139,7 +144,47 @@ export default function BookDetailView({
           <div>
             <h2 className="text-3xl font-extrabold text-gray-800 mb-6 leading-tight">{selectedBook.title || "제목 없음"}</h2>
             <div className="space-y-3">
-              {/* 저자, 출판사 등 영역 생략(유지) */}
+                            <div className="space-y-3">
+                <div className="flex border-b border-gray-100 pb-3">
+                  <span className="w-24 text-sm font-bold text-gray-500">저자</span>
+                  <span className="text-sm text-gray-700">
+                    {selectedBook.author || "저자 정보 없음"}
+                  </span>
+                </div>
+ 
+                <div className="flex border-b border-gray-100 pb-3">
+                  <span className="w-24 text-sm font-bold text-gray-500">출판사</span>
+                  <span className="text-sm text-gray-700">
+                    {selectedBook.publisher || "출판사 정보 없음"}
+                  </span>
+                </div>
+ 
+                <div className="flex border-b border-gray-100 pb-3">
+                  <span className="w-24 text-sm font-bold text-gray-500">등록일</span>
+                  <span className="text-sm text-gray-700">
+                    {selectedBook.created
+                      ? new Date(selectedBook.created).toLocaleDateString("ko-KR")
+                      : "등록일 정보 없음"}
+                  </span>
+                </div>
+ 
+                <div className="flex border-b border-gray-100 pb-3">
+                  <span className="w-24 text-sm font-bold text-gray-500">수정일</span>
+                  <span className="text-sm text-gray-700">
+                    {selectedBook.updated
+                      ? new Date(selectedBook.updated).toLocaleDateString("ko-KR")
+                      : "수정일 정보 없음"}
+                  </span>
+                </div>
+ 
+                <div className="flex border-b border-gray-100 pb-3">
+                  <span className="w-24 text-sm font-bold text-gray-500">좋아요</span>
+                  <span className="text-sm text-gray-700">
+                    {selectedBook.like_count ?? 0}개
+                  </span>
+                </div>
+              </div>
+ 
             </div>
           </div>
           <button onClick={() => { const nextBorrowerId = isAvailable ? currentUser?.id : ""; toggleMutation.mutate({ id: selectedBook.id, isAvailable, borrower_id: nextBorrowerId }) }} disabled={toggleMutation.isPending || !currentUser || !canControl} className={`mt-8 w-full py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${!currentUser ? "bg-gray-200 text-gray-500" : !canControl ? "bg-gray-200 text-gray-400" : isAvailable ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}>

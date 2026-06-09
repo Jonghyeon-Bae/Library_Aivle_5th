@@ -7,8 +7,9 @@ export async function GET(req: Request) {
     const query = searchParams.get("q");
 
     try {
+        // 수정_Antigravity_1 TLS 연결 문제 해결을 위해 HTTPS 대신 HTTP 사용
         const res = await axios.get(
-        "https://www.aladin.co.kr/ttb/api/ItemSearch.aspx",
+            "http://www.aladin.co.kr/ttb/api/ItemSearch.aspx",
             {
                 params: {
                     ttbkey: ALADIN_TTB_KEY,
@@ -20,6 +21,9 @@ export async function GET(req: Request) {
                     output: "js",
                     Version: "20131101",
                 },
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
             }
         );
         let data = res.data;
@@ -42,8 +46,9 @@ export async function POST(req: Request) {
         }
 
         // 알라딘 상품 조회(ItemLookUp) API 호출
+        // 수정_Antigravity_2 TLS 연결 문제 해결을 위해 HTTPS 대신 HTTP 사용
         const res = await axios.get(
-            "https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx",
+            "http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx",
             {
                 params: {
                     ttbkey: ALADIN_TTB_KEY,
@@ -52,6 +57,9 @@ export async function POST(req: Request) {
                     output: "js",
                     Version: "20131101",
                 },
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
             }
         );
 
