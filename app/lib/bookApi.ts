@@ -104,3 +104,11 @@ export async function getPopularBooks() {
   return data as bookProps[];
 }
 
+// 12. AI 도서 표지 저장 (PATCH)
+export async function updateBookCover(id: string, coverDataUrl: string) {
+  const { data } = await apiClient.patch(`/api/books/${id}/cover`, {
+    coverDataUrl,
+  });
+  return data;
+}
+

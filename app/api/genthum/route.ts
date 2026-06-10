@@ -65,12 +65,10 @@ export async function POST(request: Request) {
     const filePath = path.join(publicCoversDir, fileName);
     fs.writeFileSync(filePath, buffer);
 
-    // PocketBase URL 검증 통과를 위해 절대 URL로 생성하여 반환 (캐싱 방지용 타임스탬프 포함)
-    const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const savedUrl = `${protocol}://${host}/covers/${fileName}?t=${Date.now()}`;
+    // AGENTS.md 룰에 따라 절대 경로가 아닌 상대 경로(/covers/파일명.png) 형태로 반환 (캐시 버스팅 포함)
+    const relativeUrl = `/covers/${fileName}?t=${Date.now()}`;
 
-    return NextResponse.json({ url: savedUrl });
+    return NextResponse.json({ url: relativeUrl });
   } catch (error: unknown) {
     let errorMessage = '알 수 없는 오류가 발생했습니다.';
     if (axios.isAxiosError(error)) {
