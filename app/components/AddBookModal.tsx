@@ -161,7 +161,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
         title: book.title, 
         author: book.author, // 알라딘은 저자 정보가 문자열로 제공됨
         publisher: book.publisher, 
-        thumbnail: book.thumbnail, // 알라딘의 이미지 키값은 cover
+        thumbnail: book.cover || book.thumbnail, // 알라딘의 이미지 키값은 cover
         isbn13: book.isbn13, // 도서 고유값 isbn13
         isAvailable: true, 
         bestbook: metrics.isRecommended, // ➔ 자동 판별된 시스템 추천 여부 바인딩 (리뷰 8.5↑ OR 판매지수 15000↑)
@@ -287,7 +287,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
           {results.map((book: bookProps, idx) => (
             <div key={idx} className="flex gap-4 items-center border-b pb-4">
               {/* 알라딘 API는 이미지 키가 thumbnail이 아닌 cover로 제공됨 */}
-              <img src={book.thumbnail || "https://via.placeholder.com/50"} alt="표지" className="w-12 object-cover" />
+              <img src={book.cover || book.thumbnail || "https://via.placeholder.com/50"} alt="표지" className="w-12 object-cover" />
               <div className="flex-1">
                 <p className="font-bold line-clamp-1">{book.title}</p>
                 <p className="text-sm text-gray-500">{book.author} | {book.publisher}</p>
