@@ -41,3 +41,66 @@ export async function deleteBook(id: string) {
   const { data } = await apiClient.delete(`/api/books/${id}`);
   return data;
 }
+
+// 5. 도서 상세 조회 (GET)
+export async function getBookById(id: string) {
+  const { data } = await apiClient.get(`/api/books/${id}`);
+  return data;
+}
+
+// 6. AI 리뷰 업데이트 (PATCH)
+export async function updateBookReview(id: string, aiReview: string) {
+  const { data } = await apiClient.patch(`/api/books/${id}`, {
+    aiReview,
+  });
+  return data;
+}
+
+// 7. ISBN 중복 체크 (GET)
+export async function checkDuplicateIsbn13(isbn13: string) {
+  const { data } = await apiClient.get('/api/books/check-isbn', {
+    params: { isbn13 },
+  });
+  return data; // boolean 반환
+}
+
+// 8. 최근 검색 기록 조회 (GET)
+export async function getSearchHistory(userId: string) {
+  const { data } = await apiClient.get('/api/search-history', {
+    params: { userId },
+  });
+  return {
+    items: data || [],
+  };
+}
+
+// 9. 검색 기록 저장 (POST)
+export async function createSearchHistory(userId: string, keyword: string) {
+  const { data } = await apiClient.post('/api/search-history', {
+    userId,
+    keyword,
+  });
+  return data;
+}
+
+// 10. 특정 유저가 등록한 도서 조회 (GET)
+export async function getBooksByUser(userId: string, page: number, size: number) {
+  const { data } = await apiClient.get(`/api/books/user/${userId}`, {
+    params: {
+      page: page - 1, // Next.js(1) -> Spring Boot(0)
+      size,
+    },
+  });
+  return {
+    items: (data.content || []) as bookProps[],
+    totalPages: Math.ceil((data.totalElements || 0) / size),
+    totalItems: data.totalElements || 0
+  };
+}
+
+// 11. 인기 도서 TOP 10 랭킹 조회 (GET)
+export async function getPopularBooks() {
+  const { data } = await apiClient.get('/api/books/ranking');
+  return data as bookProps[];
+}
+

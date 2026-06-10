@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { pb } from '../lib/pocketbase';
+import { login } from '../lib/authApi';
 import { X, Mail, Lock, LogIn, Loader2 } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRegisterClick: () => void;
+  onLoginSuccess?: (user: any) => void;
 }
 
-export default function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, onRegisterClick, onLoginSuccess }: LoginModalProps) {
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,12 +30,25 @@ export default function LoginModal({ isOpen, onClose, onRegisterClick }: LoginMo
     setError('');
 
     try {
-      await pb.collection('users').authWithPassword(identity.trim(), password);
+      const res = await login(identity.trim(), password);
+      localStorage.setItem('token', res.token);
+      
+      const loggedInUser = {
+        id: res.id,
+        email: res.email,
+        name: res.name,
+        avatar: res.avatar
+      };
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+
       alert('로그인에 성공했습니다!');
+      if (onLoginSuccess) {
+        onLoginSuccess(loggedInUser);
+      }
       onClose();
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+      setError(err?.response?.data?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
     } finally {
       setIsLoading(false);
     }

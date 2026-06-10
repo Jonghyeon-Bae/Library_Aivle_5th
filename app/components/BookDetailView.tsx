@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { bookProps } from '../page';
 import AiThumbnailGenerator from '../genthum/AiThumbnailGenerator';
 import { Sparkles, Palette } from 'lucide-react';
-import { pb } from '../lib/pocketbase';
+import { getBookById, updateBookReview } from '../lib/bookApi';
 
 interface MutationLike<T>{
   mutate: (args: T) => void;
@@ -16,7 +16,8 @@ export default function BookDetailView({
   toggleMutation,
   deleteMutation,
   onDelete,
-  onUpdateBook 
+  onUpdateBook,
+  currentUser
 }: { 
   selectedBook: bookProps
   onBack: () => void
@@ -24,6 +25,7 @@ export default function BookDetailView({
   deleteMutation: MutationLike<string> 
   onDelete: (id: string) => void
   onUpdateBook?: (book: bookProps) => void 
+  currentUser: any
 }) {
   const [isAiGenOpen, setIsAiGenOpen] = useState(false);
   const [isGeneratingReview, setIsGeneratingReview] = useState(false);
@@ -32,21 +34,20 @@ export default function BookDetailView({
   // 💡 1. 부모가 준 과거 데이터를 덮어쓸 안전한 '로컬 AI 리뷰 상태' 생성
   const [localAiReview, setLocalAiReview] = useState(selectedBook.ai_review || "");
 
-  const currentUser = pb.authStore.model;
   const isAvailable = selectedBook.isAvailable;
   const isBorrower = currentUser?.id === selectedBook.borrower_id;
   const canControl = isAvailable || (!isAvailable && isBorrower);
 
-  // 💡 2. 컴포넌트 마운트(진입) 시 PocketBase에서 최신 데이터 강제 동기화
+  // 💡 2. 컴포넌트 마운트(진입) 시 Spring Boot에서 최신 데이터 강제 동기화
   useEffect(() => {
     let isMounted = true;
     
     const fetchLatestData = async () => {
       try {
-        // requestKey: null 옵션은 연속된 동일 API 호출이 취소되는 것을 방지합니다.
-        const record = await pb.collection('books').getOne(selectedBook.id, { requestKey: null });
-        if (isMounted && record.ai_review) {
-          setLocalAiReview(record.ai_review); // DB에서 가져온 최신 리뷰로 덮어쓰기
+        const record = await getBookById(selectedBook.id);
+        const review = record.aiReview || record.ai_review;
+        if (isMounted && review) {
+          setLocalAiReview(review); // DB에서 가져온 최신 리뷰로 덮어쓰기
         }
       } catch (error) {
         console.error("도서 최신 데이터 동기화 실패:", error);
@@ -98,7 +99,7 @@ export default function BookDetailView({
         setStreamedReview(fullReview);
       }
 
-      await pb.collection('books').update(selectedBook.id, { ai_review: fullReview });
+      await updateBookReview(selectedBook.id, fullReview);
       
       // 💡 3. 스트리밍 완료 후 즉시 로컬 상태 갱신
       setLocalAiReview(fullReview); 

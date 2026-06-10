@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pb } from './lib/pocketbase'
 import AddBookModal from './components/AddBookModal';
 import DashboardChart from './components/DashboardChart';
 import LoginModal from './login/LoginModal';
@@ -13,7 +12,7 @@ import Link from 'next/link';
 import BookDetailView from './components/BookDetailView';
 import BookListView from './components/BookListView';
 import ManualAddBookModal from './components/ManualAddBookModal';
-import { getBooks } from './lib/bookApi';
+import { getBooks, deleteBook, updateBookStatus } from './lib/bookApi';
 
 
 // 수정_최승헌_5-2 bookProps 업데이트 (ai_review, user_id, created, updated 필드 추가)
@@ -54,21 +53,19 @@ export default function Home() {
   const perPage = 8;
 
   useEffect(() => {
-    setUser(pb.authStore.model);
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    }
     setIsHydrated(true);
-
-    const unsubscribe = pb.authStore.onChange((token, model) => {
-      setUser(model);
-      queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [queryClient]);
+  }, []);
 
   const handleLogout = useCallback(() => {
-    pb.authStore.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
     alert('로그아웃되었습니다.');
   }, []);
 
@@ -91,8 +88,7 @@ export default function Home() {
   // 목록은 페이지네이션 데이터, 대시보드는 전체 통계 데이터가 필요해서 분리
   const { data: dashboardBooks } = useQuery({
     queryKey: ['books-dashboard'],
-    queryFn: () => 
-      pb.collection('books').getFullList(),
+    queryFn: () => getBooks(1, 1000, '-created').then(res => res.items),
   });
 
   // 최적화_useMemo로 allBooks 메모이제이션: DashboardChart의 memo 효과 극대화
@@ -118,7 +114,7 @@ export default function Home() {
 
   // 2. 도서 삭제 (Delete)
   const deleteMutation = useMutation({
-    mutationFn: (id:string) => pb.collection('books').delete(id),
+    mutationFn: (id:string) => deleteBook(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
@@ -129,7 +125,7 @@ export default function Home() {
   
   const toggleMutation = useMutation({
     mutationFn: ({ id, isAvailable, borrower_id } : {id:string,isAvailable?:boolean,borrower_id?:string}) =>
-      pb.collection('books').update(id, { isAvailable: !isAvailable, borrower_id }),
+      updateBookStatus(id, !isAvailable, borrower_id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
@@ -235,6 +231,7 @@ export default function Home() {
           deleteMutation={deleteMutation}
           onDelete={() => setSelectedBook(null)}
           onUpdateBook={setSelectedBook}
+          currentUser={user}
         />
       ) : (
         <BookListView
@@ -247,13 +244,14 @@ export default function Home() {
           setSortOption={setSortOption}
           setPage={setPage}
           deleteMutation={deleteMutation}
+          currentUser={user}
         />
       )}
 
       {/* 등록 모달 */}
-      <AddBookModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <AddBookModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} currentUser={user} />
       {/* 수동 등록 모달 */}
-      <ManualAddBookModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} />
+      <ManualAddBookModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} currentUser={user} />
 
       {/* 로그인 모달 */}
       <LoginModal
@@ -262,6 +260,10 @@ export default function Home() {
         onRegisterClick={() => {
           setIsLoginOpen(false);
           setIsRegisterOpen(true);
+        }}
+        onLoginSuccess={(loggedInUser) => {
+          setUser(loggedInUser);
+          queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
         }}
       />
 
@@ -272,6 +274,10 @@ export default function Home() {
         onLoginClick={() => {
           setIsRegisterOpen(false);
           setIsLoginOpen(true);
+        }}
+        onRegisterSuccess={(loggedInUser) => {
+          setUser(loggedInUser);
+          queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
         }}
       />
 

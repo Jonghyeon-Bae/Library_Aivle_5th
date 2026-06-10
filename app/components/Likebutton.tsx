@@ -2,97 +2,67 @@
 
 import { memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pb } from '../lib/pocketbase';
+import { getLikeStatus, likeBook, unlikeBook } from '../lib/likeApi';
 
-const LikeButton = memo(function LikeButton({ bookId, initialLikeCount }: { bookId: string; initialLikeCount: number }) {
+const LikeButton = memo(function LikeButton({ 
+  bookId, 
+  initialLikeCount,
+  currentUser 
+}: { 
+  bookId: string; 
+  initialLikeCount: number;
+  currentUser: any;
+}) {
   const queryClient = useQueryClient();
-  const currentUser = pb.authStore.model;
 
-  // 1. 현재 유저가 이 책에 좋아요를 눌렀는지 확인
-  const { data: likeRecord } = useQuery({
-    queryKey: ['likes', bookId, currentUser?.id],
-    queryFn: async () => {
-      try {
-        return await pb.collection('likes').getFirstListItem(
-          `book="${bookId}" && user="${currentUser?.id}"`
-        );
-      } catch (error) {
-        return null;
-      }
-    },
-    enabled: !!currentUser?.id && !!bookId,
+  // 1. 현재 도서의 좋아요 상태(여부 및 전체 개수) 통합 조회
+  const { data: likeStatus, refetch: refetchLikeStatus } = useQuery({
+    queryKey: ['likeStatus', bookId, currentUser?.id],
+    queryFn: () => getLikeStatus(bookId),
+    enabled: !!bookId,
   });
 
-  // 2. books 컬렉션에서 like_count 필드 조회 (main.pb.js에서 관리)
-  // PocketBase의 hooks에서 like_count를 자동으로 업데이트하므로, 여기서는 books의 like_count만 참조
-  const { data: bookData, refetch: refetchBookData } = useQuery({
-    queryKey: ['bookDetail', bookId],
-    queryFn: async () => {
-      try {
-        return await pb.collection('books').getOne(bookId);
-      } catch (error) {
-        console.error(error)
-        return null;
-      }
-    },
-    staleTime: 0, // 항상 fresh 상태로 유지
-    gcTime: 5 * 60 * 1000, // 5분 캐시
-  });
-
-  const isLiked = !!likeRecord;
-  const userLikeRecordId = likeRecord?.id || null;
-  // books 컬렉션의 like_count를 사용 (PocketBase 백엔드에서 관리)
-  const currentLikeCount = bookData?.like_count ?? initialLikeCount ?? 0;
+  const isLiked = likeStatus?.liked ?? false;
+  const currentLikeCount = likeStatus?.likeCount ?? initialLikeCount ?? 0;
 
   // 2. 좋아요 토글 뮤테이션
   const toggleLikeMutation = useMutation({
     mutationFn: async () => {
       if (!currentUser) throw new Error('로그인이 필요합니다.');
-      console.log('좋아요 시도:', { bookId, userId: currentUser.id, isLiked });
-
-      if (userLikeRecordId) {
-        console.log('좋아요 삭제:', userLikeRecordId);
-        return await pb.collection('likes').delete(userLikeRecordId);
+      if (isLiked) {
+        return await unlikeBook(bookId);
       } else {
-        console.log('좋아요 생성:', { book: bookId, user: currentUser.id });
-        return await pb.collection('likes').create({
-          book: bookId,
-          user: currentUser.id,
-        });
+        return await likeBook(bookId);
       }
     },
     onMutate: async () => {
-      // Optimistic update: 책 상세 정보 갱신 (UI 즉시 반영)
-      await queryClient.cancelQueries({ queryKey: ['bookDetail', bookId] });
-      const previousBookData = queryClient.getQueryData(['bookDetail', bookId]);
+      // Optimistic update (UI 즉시 반응)
+      await queryClient.cancelQueries({ queryKey: ['likeStatus', bookId, currentUser?.id] });
+      const previousLikeStatus = queryClient.getQueryData(['likeStatus', bookId, currentUser?.id]);
 
-      queryClient.setQueryData(['bookDetail', bookId], (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData(['likeStatus', bookId, currentUser?.id], (old: any) => {
+        if (!old) return { liked: !isLiked, likeCount: isLiked ? currentLikeCount - 1 : currentLikeCount + 1 };
         return {
-          ...old,
-          like_count: isLiked ? old.like_count - 1 : old.like_count + 1,
+          liked: !old.liked,
+          likeCount: old.liked ? old.likeCount - 1 : old.likeCount + 1,
         };
       });
 
-      return { previousBookData };
+      return { previousLikeStatus };
     },
-    onSuccess: (data) => {
-      console.log('좋아요 성공!', data);
-      // 1. 현재 유저의 좋아요 여부 갱신
-      queryClient.invalidateQueries({ queryKey: ['likes', bookId, currentUser?.id] });
-      // 2. 책 상세 정보 갱신 (like_count가 PocketBase에서 업데이트됨)
-      refetchBookData();
-      // 3. 책 목록 갱신 (목록에서도 like_count가 보이도록)
+    onSuccess: () => {
+      // 쿼리 갱신 및 목록 새로고침
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
-      // 4. 랭킹 사이드바 갱신
       queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
+      queryClient.invalidateQueries({ queryKey: ['myBooks'] });
+      refetchLikeStatus();
     },
     onError: (error: any, variables, context: any) => {
       console.error('좋아요 에러:', error?.message || error);
-      // Optimistic update 롤백
-      if (context?.previousBookData !== undefined) {
-        queryClient.setQueryData(['bookDetail', bookId], context.previousBookData);
+      // 에러 발생 시 롤백
+      if (context?.previousLikeStatus !== undefined) {
+        queryClient.setQueryData(['likeStatus', bookId, currentUser?.id], context.previousLikeStatus);
       }
     },
   });
@@ -116,5 +86,4 @@ const LikeButton = memo(function LikeButton({ bookId, initialLikeCount }: { book
   );
 });
 
-// 최적화_React.memo 적용: bookId와 initialLikeCount props가 변경될 때만 리렌더링
 export default LikeButton;
