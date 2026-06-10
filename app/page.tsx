@@ -23,6 +23,7 @@ export interface bookProps{
   author?:string 
   publisher?:string   // Stinrg or Undefined 
   thumbnail?:string
+  cover?:string
   isAvailable?:boolean
   borrower_id?: string;
   bestbook?:boolean
