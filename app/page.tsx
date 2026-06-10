@@ -13,6 +13,7 @@ import Link from 'next/link';
 import BookDetailView from './components/BookDetailView';
 import BookListView from './components/BookListView';
 import ManualAddBookModal from './components/ManualAddBookModal';
+import { getBooks } from './lib/bookApi';
 
 
 // 수정_최승헌_5-2 bookProps 업데이트 (ai_review, user_id, created, updated 필드 추가)
@@ -75,9 +76,11 @@ export default function Home() {
   const { data, isPending } = useQuery({
     queryKey: ['books', sortOption, page],
     queryFn: () =>
-      pb.collection('books').getList(page, perPage, {
-        sort: sortOption,
-      }),
+      getBooks(page,perPage,sortOption)
+      // Pocketbase Mode:
+      // pb.collection('books').getList(page, perPage, {
+      //   sort: sortOption,
+      // }),
   });
 
   const books = useMemo(() => {
@@ -88,7 +91,8 @@ export default function Home() {
   // 목록은 페이지네이션 데이터, 대시보드는 전체 통계 데이터가 필요해서 분리
   const { data: dashboardBooks } = useQuery({
     queryKey: ['books-dashboard'],
-    queryFn: () => pb.collection('books').getFullList(),
+    queryFn: () => 
+      pb.collection('books').getFullList(),
   });
 
   // 최적화_useMemo로 allBooks 메모이제이션: DashboardChart의 memo 효과 극대화
