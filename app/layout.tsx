@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aivle 4th MiniProject for Nextjs",
-  description: "Books Management System with PocketBase & Kakao API",
+  title: "Aivle 5th MiniProject for Nextjs & Spring Boot",
+  description: "Books Management System for Spring Boot & Aiven CloudDB,
 };
 
 export default function RootLayout({
