@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 // 수정 AI 느낌을 줄이기 위해 Sparkles 아이콘을 Palette 아이콘으로 교체
-import { pb } from '../lib/pocketbase';
+import { updateBookCover } from '../lib/bookApi';
 import { bookProps } from '../page';
 import { Palette, X, Check, RefreshCw, Undo, Download, Image as ImageIcon } from 'lucide-react';
 import { STYLE_PRESETS } from '../lib/stylePresets';
@@ -68,15 +68,23 @@ export default function AiThumbnailGenerator({ isOpen, onClose, book, onUpdateSu
     return () => clearInterval(interval);
   }, [isGenerating]);
 
-  // PocketBase DB 반영 Mutation
+  // Spring Boot DB 반영 Mutation
   const updateMutation = useMutation({
     mutationFn: async (url: string) => {
-      return pb.collection('books').update(book.id, { thumbnail: url });
+      return updateBookCover(book.id, url);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['myBooks', pb.authStore.model?.id] });
+      
+      let userId = null;
+      if (typeof window !== 'undefined') {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          userId = JSON.parse(savedUser).id;
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['myBooks', userId] });
       
       alert('AI 표지가 책장에 성공적으로 적용되었습니다!');
       if (onUpdateSuccess) {
@@ -86,7 +94,7 @@ export default function AiThumbnailGenerator({ isOpen, onClose, book, onUpdateSu
     },
     onError: (err) => {
       console.error('표지 저장 실패:', err);
-      alert('PocketBase 저장 중 오류가 발생했습니다.');
+      alert('표지 이미지 저장 중 오류가 발생했습니다.');
     }
   });
 
