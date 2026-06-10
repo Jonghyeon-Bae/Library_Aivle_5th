@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pb } from '../lib/pocketbase';
+import { getBooksByUser, deleteBook, updateBookStatus } from '../lib/bookApi';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Mail, Calendar } from 'lucide-react';
@@ -22,35 +22,23 @@ export default function MyPage() {
   const perPage = 8;
 
   useEffect(() => {
-    const currentUser = pb.authStore.model;
-    setUser(currentUser);
-    setIsHydrated(true);
-
-    if (!currentUser) {
-      alert('로그인이 필요합니다.');
-      router.push('/');
-    }
-
-    const unsubscribe = pb.authStore.onChange((_token, model) => {
-      setUser(model);
-      if (!model) {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      if (token && savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else {
+        alert('로그인이 필요합니다.');
         router.push('/');
       }
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    }
+    setIsHydrated(true);
   }, [router]);
 
   // 내가 등록한 도서 — 페이지네이션 적용
   const { data, isPending } = useQuery({
     queryKey: ['myBooks', user?.id, sortOption, page],
-    queryFn: () =>
-      pb.collection('books').getList(page, perPage, {
-        filter: `user_id = "${user?.id}"`,
-        sort: sortOption,
-      }),
+    queryFn: () => getBooksByUser(user.id, page, perPage),
     enabled: !!user?.id,
   });
 
@@ -62,16 +50,13 @@ export default function MyPage() {
   // 통계 카드용 전체 목록 (페이지네이션과 별도)
   const { data: myBooksAll } = useQuery<bookProps[]>({
     queryKey: ['myBooks-stats', user?.id],
-    queryFn: () =>
-      pb.collection('books').getFullList({
-        filter: `user_id = "${user?.id}"`,
-      }),
+    queryFn: () => getBooksByUser(user.id, 1, 1000).then(res => res.items),
     enabled: !!user?.id,
   });
 
   // 도서 삭제
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => pb.collection('books').delete(id),
+    mutationFn: (id: string) => deleteBook(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
       queryClient.invalidateQueries({ queryKey: ['myBooks-stats'] });
@@ -83,7 +68,7 @@ export default function MyPage() {
   // 대출 상태 토글 — 메인 페이지와 동일하게 borrower_id 지원
   const toggleMutation = useMutation({
     mutationFn: ({ id, isAvailable, borrower_id }: { id: string; isAvailable?: boolean; borrower_id?: string }) =>
-      pb.collection('books').update(id, { isAvailable: !isAvailable, borrower_id }),
+      updateBookStatus(id, !isAvailable, borrower_id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
       queryClient.invalidateQueries({ queryKey: ['myBooks-stats'] });
@@ -221,6 +206,7 @@ export default function MyPage() {
             deleteMutation={deleteMutation}
             onDelete={() => setSelectedBook(null)}
             onUpdateBook={setSelectedBook}
+            currentUser={user}
           />
         ) : (
           /* 도서 목록 — 메인과 동일한 BookListView + 페이지네이션 */
@@ -234,6 +220,7 @@ export default function MyPage() {
             setSortOption={setSortOption}
             setPage={setPage}
             deleteMutation={deleteMutation}
+            currentUser={user}
           />
         )}
       </div>

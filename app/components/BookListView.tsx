@@ -13,7 +13,8 @@ sortOption,
 setPressSetSelectedBook,
 setSortOption,
 setPage,
-deleteMutation 
+deleteMutation,
+currentUser 
 }: {
 books: bookProps[]
 totalPages: number
@@ -23,7 +24,8 @@ sortOption: string
 setPressSetSelectedBook: (book: bookProps) => void
 setSortOption: (option: string) => void
 setPage: (pageNum: number) => void
-deleteMutation: any }) {
+deleteMutation: any
+currentUser: any }) {
 
 return(
         <>
@@ -106,7 +108,7 @@ return(
                   <p className="text-sm text-gray-500 mt-1 line-clamp-1">{book.author} | {book.publisher}</p>
 
                   <div onClick={(e) => e.stopPropagation()}>
-                    <LikeButton bookId={book.id} initialLikeCount={book.like_count || 0} />
+                    <LikeButton bookId={book.id} initialLikeCount={book.like_count || 0} currentUser={currentUser} />
                   </div>
 
                 </div>

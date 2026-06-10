@@ -1,10 +1,10 @@
 'use client';
 
-import { memo, useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { memo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { bookProps } from '../page';
 import { Heart, Trophy, X, Award, Loader2 } from 'lucide-react';
-import { pb } from '../lib/pocketbase';
+import { getPopularBooks } from '../lib/bookApi';
 
 // 수정_종현_1 props에서 books 배열을 받던 방식을 제거하고,
 // 내부에서 getFullList로 전체 도서를 직접 조회하여 페이지네이션과 무관한 전체 기준 랭킹을 표시
@@ -20,36 +20,9 @@ const RankingSidebar = memo(function RankingSidebar({ onBookSelect }: RankingSid
   // query key: ['books-ranking'] — 페이지/정렬 옵션과 독립적
   const { data: ranked , isLoading } = useQuery<bookProps[]>({
     queryKey: ['books-ranking'],
-    queryFn: async () => {
-      const records = await pb.collection('books').getFullList<bookProps>({
-        sort: '-like_count',
-      });
-      return records.slice(0, 10);
-    },
-    staleTime: 0, // 1분 캐시
+    queryFn: () => getPopularBooks(),
+    staleTime: 0,
   });
-
-  // 실시간 반영: PocketBase realtime으로 변경 발생 시 쿼리 무효화하여 최신 데이터 재조회
-  const queryClient = useQueryClient();
-  useEffect(() => {
-    let unsubscribe: any;
-    const initSubscription = async () => {
-      try {
-        unsubscribe = await pb.collection('books').subscribe('*', () => {
-          queryClient.invalidateQueries({ queryKey: ['books-ranking'] });
-        });
-      } catch (e) {
-        console.error(e);
-        // 구독 실패 시 무시
-      }
-    };
-    initSubscription();
-    return () => {
-      if (unsubscribe && typeof unsubscribe.unsubscribe === 'function') {
-        unsubscribe.unsubscribe();
-      }
-    };
-  }, [queryClient]);
   
   // ranked는 useQuery로부터 받아온 전체 도서 기준의 랭킹 목록입니다.
   if (!ranked || ranked.length === 0) return null;

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { pb } from '../lib/pocketbase';
+import { getSearchHistory, createSearchHistory, createBook, checkDuplicateIsbn13 } from '../lib/bookApi';
 import { searchBookFromAladin, lookupBookMetricsFromAladin } from '../lib/aladinApi';
 import { Search, X, Clock, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { bookProps } from '../page';
@@ -11,6 +11,7 @@ import axios from 'axios';
 interface AddBookModalProps{
   isOpen:boolean
   onClose:()=>void
+  currentUser:any
 }
 
 interface NewBookProps{
@@ -29,7 +30,7 @@ interface NewBookProps{
   isbn13?:string
 }
 
-export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
+export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookModalProps) {
   const queryClient = useQueryClient();
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState([]);
@@ -41,16 +42,10 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
   const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // 현재 로그인한 유저 정보 가져오기
-  const currentUser = pb.authStore.model;
-
   // 최근 검색어 5개 불러오기 (Read)
   const { data: historyData } = useQuery({
     queryKey: ['searchHistory', currentUser?.id],
-    queryFn: () => pb.collection('search_history').getList(1, 5, {
-      filter: `user = "${currentUser?.id}"`,
-      sort: '-created', // 최신순 정렬
-    }),
+    queryFn: () => getSearchHistory(currentUser?.id),
     enabled: !!currentUser?.id, // 유저 ID가 있을 때만 쿼리 실행
   });
 
@@ -64,7 +59,7 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
     setIsAiLoading(true);
     try {
       // 최근 검색어 배열에서 최대 5개의 키워드만 추출하여 서버로 전송
-      const allKeywords = recentSearches.map((item) => item.keyword);
+      const allKeywords = recentSearches.map((item: any) => item.keyword);
       const targetKeywords = allKeywords.slice(0, 5);
 
       const response = await fetch('/api/recommend', {
@@ -88,7 +83,7 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
 
   // DB에 저장하는 Mutation
   const addMutation = useMutation({
-    mutationFn: (newBook: NewBookProps) => pb.collection('books').create(newBook),
+    mutationFn: (newBook: NewBookProps) => createBook(newBook),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['books'] }); // 저장 성공시 목록 새로고침!
       alert('도서가 등록되었습니다!');
@@ -100,18 +95,15 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
   });
 
   // 최승헌 추가 isbn13 기준 중복 확인 함수
-  const checkDuplicateIsbn13 = async (isbn13?: string) => {
+  const checkIsbnDuplicate = async (isbn13?: string) => {
     const targetIsbn13 = isbn13?.trim();
 
     if (!targetIsbn13) return false;
 
     try {
-      const result = await pb.collection('books').getList(1, 1, {
-        filter: `isbn13 = "${targetIsbn13.replace(/"/g, '\\"')}"`,
-      });
-      return result.totalItems > 0;
+      return await checkDuplicateIsbn13(targetIsbn13);
     } catch (error) {
-      console.warn('PocketBase books 컬렉션에 isbn13 필드가 없어 중복 검사를 건너뜁니다. 스키마 확인을 권장합니다.', error);
+      console.warn('중복 검사 중 에러 발생', error);
       return false;
     }
   };
@@ -127,10 +119,7 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
     // 검색 기록 저장 (Create)
     if (currentUser?.id) {
       try {
-        await pb.collection('search_history').create({
-          user: currentUser.id,
-          keyword: targetKeyword,
-        });
+        await createSearchHistory(currentUser.id, targetKeyword);
         
         // 기록 저장 성공 시 최근 검색어 쿼리 무효화 -> 화면 자동 갱신
         queryClient.invalidateQueries({ queryKey: ['searchHistory', currentUser?.id] });
@@ -142,7 +131,7 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
 
   // 💡 [핵심 추가] 등록 버튼 클릭 시 조회 API를 거쳐 최종 저장하는 함수
   const handleAddWithMetrics = async (book: bookProps, idx: number) => {
-    const currentUserId = pb.authStore.model?.id;
+    const currentUserId = currentUser?.id;
     if (!currentUserId) {
       alert('도서를 등록하려면 로그인이 필요합니다.');
       return;
@@ -157,7 +146,7 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
           alert('ISBN13 정보가 없는 도서입니다.');
           return;
         }
-        const isDuplicate = await checkDuplicateIsbn13(book.isbn13);
+        const isDuplicate = await checkIsbnDuplicate(book.isbn13);
 
         if (isDuplicate) {
           alert('이미 등록된 책입니다.');
@@ -227,7 +216,7 @@ export default function AddBookModal({ isOpen, onClose }:AddBookModalProps) {
                 <span>내가 찾은 검색어</span>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {recentSearches.map((item) => (
+                {recentSearches.map((item: any) => (
                   <button
                     key={item.id}
                     onClick={() => {

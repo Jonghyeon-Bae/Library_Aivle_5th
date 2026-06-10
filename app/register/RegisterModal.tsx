@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { pb } from '../lib/pocketbase';
+import { signup, login } from '../lib/authApi';
 import { X, Mail, Lock, User, UserPlus, Loader2 } from 'lucide-react';
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginClick: () => void;
+  onRegisterSuccess?: (user: any) => void;
 }
 
-export default function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalProps) {
+export default function RegisterModal({ isOpen, onClose, onLoginClick, onRegisterSuccess }: RegisterModalProps) {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -39,24 +40,29 @@ export default function RegisterModal({ isOpen, onClose, onLoginClick }: Registe
     setError('');
 
     try {
-      const data = {
-        email: email.trim(),
-        name: username.trim(), // 실제 DB의 name 필드에 매핑
-        password,
-        passwordConfirm,
-        emailVisibility: true,
-      };
-
       // 1. 회원가입 진행
-      await pb.collection('users').create(data);
-      // 2. 가입 성공 후 즉시 자동 로그인 (이메일로 인증)
-      await pb.collection('users').authWithPassword(email.trim(), password);
+      await signup(email.trim(), password, username.trim());
+      
+      // 2. 가입 성공 후 즉시 자동 로그인
+      const res = await login(email.trim(), password);
+      localStorage.setItem('token', res.token);
+      
+      const loggedInUser = {
+        id: res.id,
+        email: res.email,
+        name: res.name,
+        avatar: res.avatar
+      };
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
       
       alert('회원가입 및 로그인이 완료되었습니다!');
+      if (onRegisterSuccess) {
+        onRegisterSuccess(loggedInUser);
+      }
       onClose();
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || '회원가입에 실패했습니다. 입력값을 확인해주세요.');
+      setError(err?.response?.data?.message || '회원가입에 실패했습니다. 입력값을 확인해주세요.');
     } finally {
       setIsLoading(false);
     }

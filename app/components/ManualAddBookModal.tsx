@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { pb } from '../lib/pocketbase';
+import { createBook } from '../lib/bookApi';
 import { X, Loader2, Palette, RefreshCw, Undo, Image as ImageIcon, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { STYLE_PRESETS } from '../lib/stylePresets';
 import axios from 'axios';
@@ -10,6 +10,7 @@ import axios from 'axios';
 interface ManualAddBookModalProps {
   isOpen: boolean;
   onClose: () => void;
+  currentUser: any;
 }
 
 interface NewBookProps {
@@ -27,9 +28,8 @@ interface NewBookProps {
   ai_review?: string;
 }
 
-export default function ManualAddBookModal({ isOpen, onClose }: ManualAddBookModalProps) {
+export default function ManualAddBookModal({ isOpen, onClose, currentUser }: ManualAddBookModalProps) {
   const queryClient = useQueryClient();
-  const currentUser = pb.authStore.model;
 
   const [formData, setFormData] = useState<NewBookProps>({
     title: '',
@@ -161,7 +161,7 @@ export default function ManualAddBookModal({ isOpen, onClose }: ManualAddBookMod
 
   // DB에 저장하는 Mutation
   const addMutation = useMutation({
-    mutationFn: (newBook: NewBookProps) => pb.collection('books').create(newBook),
+    mutationFn: (newBook: NewBookProps) => createBook(newBook),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
