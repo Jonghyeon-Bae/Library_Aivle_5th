@@ -37,7 +37,8 @@ export default function LoginModal({ isOpen, onClose, onRegisterClick, onLoginSu
         id: res.id,
         email: res.email,
         name: res.name,
-        avatar: res.avatar
+        avatar: res.avatar,
+        created: res.createdAt
       };
       localStorage.setItem('user', JSON.stringify(loggedInUser));
 

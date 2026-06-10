@@ -106,8 +106,8 @@ export default function MyPage() {
     );
   }
 
-  const joinDate = user.created
-    ? new Date(user.created).toLocaleDateString('ko-KR', {
+  const joinDate = (user.created || user.createdAt)
+    ? new Date(user.created || user.createdAt).toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
