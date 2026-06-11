@@ -17,7 +17,8 @@ export default function BookDetailView({
   deleteMutation,
   onDelete,
   onUpdateBook,
-  currentUser
+  currentUser,
+  onRequireLogin
 }: { 
   selectedBook: bookProps
   onBack: () => void
@@ -26,6 +27,7 @@ export default function BookDetailView({
   onDelete: (id: string) => void
   onUpdateBook?: (book: bookProps) => void 
   currentUser: any
+  onRequireLogin?: () => void
 }) {
   const [isAiGenOpen, setIsAiGenOpen] = useState(false);
   const [isGeneratingReview, setIsGeneratingReview] = useState(false);
@@ -135,7 +137,17 @@ export default function BookDetailView({
         <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4 flex flex-col gap-4">
           <img src={selectedBook.thumbnail || "https://via.placeholder.com/300"} alt={selectedBook.title || "도서 표지"} className="w-full h-105 object-cover rounded-xl bg-gray-100" />
           {(!selectedBook.thumbnail || selectedBook.thumbnail.includes('placeholder')) && (
-            <button onClick={() => setIsAiGenOpen(true)} className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <button 
+              onClick={() => {
+                if (!currentUser) {
+                  if (onRequireLogin) onRequireLogin();
+                  else alert('로그인이 필요합니다.');
+                  return;
+                }
+                setIsAiGenOpen(true);
+              }} 
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
               <Palette size={14} /> AI 표지 이미지 생성
             </button>
           )}
@@ -188,8 +200,37 @@ export default function BookDetailView({
  
             </div>
           </div>
-          <button onClick={() => { const nextBorrowerId = isAvailable ? currentUser?.id : ""; toggleMutation.mutate({ id: selectedBook.id, isAvailable, borrower_id: nextBorrowerId }) }} disabled={toggleMutation.isPending || !currentUser || !canControl} className={`mt-8 w-full py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${!currentUser ? "bg-gray-200 text-gray-500" : !canControl ? "bg-gray-200 text-gray-400" : isAvailable ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}>
-            {!currentUser ? "로그인이 필요합니다" : toggleMutation.isPending ? "처리 중..." : isAvailable ? "대출하기" : isBorrower ? "반납하기" : "대출 중 (반납 권한 없음)"}
+          <button 
+            onClick={() => { 
+              if (!currentUser) {
+                if (onRequireLogin) onRequireLogin();
+                else alert('로그인이 필요합니다.');
+                return;
+              }
+              const nextBorrowerId = isAvailable ? currentUser?.id : ""; 
+              toggleMutation.mutate({ id: selectedBook.id, isAvailable, borrower_id: nextBorrowerId });
+            }} 
+            disabled={toggleMutation.isPending || (currentUser && !canControl)} 
+            className={`mt-8 w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+              !currentUser 
+                ? "bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer shadow-md" 
+                : !canControl 
+                  ? "bg-gray-200 text-gray-400" 
+                  : isAvailable 
+                    ? "bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer" 
+                    : "bg-red-100 text-red-700 hover:bg-red-200 cursor-pointer"
+            }`}
+          >
+            {!currentUser 
+              ? (isAvailable ? "대출하기 (로그인 필요)" : "대출 중 (로그인 필요)") 
+              : toggleMutation.isPending 
+                ? "처리 중..." 
+                : isAvailable 
+                  ? "대출하기" 
+                  : isBorrower 
+                    ? "반납하기" 
+                    : "대출 중 (반납 권한 없음)"
+            }
           </button>
         </div>
       </div>
@@ -211,7 +252,14 @@ export default function BookDetailView({
             <h3 className="text-xl font-bold text-gray-800">AI 요약</h3>
           </div>
           <button
-            onClick={handleGenerateReview}
+            onClick={() => {
+              if (!currentUser) {
+                if (onRequireLogin) onRequireLogin();
+                else alert('로그인이 필요합니다.');
+                return;
+              }
+              handleGenerateReview();
+            }}
             disabled={isGeneratingReview}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-800 text-white font-bold rounded-lg hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -234,7 +282,20 @@ export default function BookDetailView({
       </div>
 
       <div className="mt-6 flex justify-end">
-        <button onClick={() => { if (confirm("정말 삭제하시겠습니까?")) { deleteMutation.mutate(selectedBook.id); onDelete(selectedBook.id); } }} className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600">
+        <button 
+          onClick={() => { 
+            if (!currentUser) {
+              if (onRequireLogin) onRequireLogin();
+              else alert('로그인이 필요합니다.');
+              return;
+            }
+            if (confirm("정말 삭제하시겠습니까?")) { 
+              deleteMutation.mutate(selectedBook.id); 
+              onDelete(selectedBook.id); 
+            } 
+          }} 
+          className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600"
+        >
           도서 삭제
         </button>
       </div>

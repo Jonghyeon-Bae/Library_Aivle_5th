@@ -65,6 +65,15 @@ export default function IllegalBanners() {
       icon: <Award size={16} className="animate-bounce" />,
     },
     {
+      id: 14,
+      title: '📘 장문경의 "백엔드? ㅎ 못해?"',
+      badge: '에이블데이2위',
+      description: '백엔드 전공자 장문경의 백엔드 개론 수록!',
+      alertMsg: '📘 [베스트셀러 독점] "장문경의 백엔드? ㅎ 못해?" - "이 책을 읽고 저도 5차 미니프로젝트에서 백엔드를 완성했습니다." (도서관 특별 한정판)',
+      styleType: 'crazy',
+      icon: <Award size={16} className="animate-bounce" />,
+    },
+    {
       id: 6,
       title: '☕ 에이블러 필수! 생존 포션 판매',
       badge: '카페인100%',

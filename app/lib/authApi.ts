@@ -17,3 +17,12 @@ export async function signup(email: string, password: string, name: string) {
   });
   return data; // User
 }
+
+export async function updateProfile(name?: string, currentPassword?: string, newPassword?: string) {
+  const { data } = await apiClient.put('/api/auth/update', {
+    name: name || undefined,
+    currentPassword: currentPassword || undefined,
+    newPassword: newPassword || undefined,
+  });
+  return data; // UserUpdateResponse { id, email, name, avatar }
+}

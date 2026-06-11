@@ -5,12 +5,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBooksByUser, deleteBook, updateBookStatus } from '../lib/bookApi';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Mail, Calendar } from 'lucide-react';
+import { ArrowLeft, BookOpen, Mail, Calendar, User } from 'lucide-react';
 import BookDetailView from '../components/BookDetailView';
 import BookListView from '../components/BookListView';
 import { bookProps } from '../page';
 import IllegalBanners from '../components/IllegalBanners';
 import RankingSidebar from '../components/RankingSidebar';
+import UpdateProfileModal from '../components/UpdateProfileModal';
 
 export default function MyPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function MyPage() {
   const [page, setPage] = useState(1);
   const [sortOption, setSortOption] = useState<string>('-created');
   const perPage = 8;
+  const [isUpdateProfileOpen, setIsUpdateProfileOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -63,14 +65,24 @@ export default function MyPage() {
   });
 
   // 도서 삭제
+  // 수정_종현_04 도서 삭제 결과(성공/실패)에 대한 안내 메시지 보완
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteBook(id),
     onSuccess: () => {
+      alert('도서가 성공적으로 삭제되었습니다.');
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
       queryClient.invalidateQueries({ queryKey: ['myBooks-stats'] });
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
     },
+    onError: (error: any) => {
+      const errMsg = error?.response?.data?.message;
+      if (errMsg === 'You do not have permission to modify or delete this resource.') {
+        alert('도서를 등록한 본인만 삭제할 수 있습니다.');
+      } else {
+        alert(errMsg || '도서 삭제 중 오류가 발생했습니다.');
+      }
+    }
   });
 
   // 대출 상태 토글 — 메인 페이지와 동일하게 borrower_id 지원
@@ -188,6 +200,14 @@ export default function MyPage() {
                     {joinDate} 가입
                   </span>
                 </div>
+                {/* 추가_최승헌_5-5 개인정보 변경 버튼 */}
+                <button
+                  onClick={() => setIsUpdateProfileOpen(true)}
+                  className="mt-4 inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3.5 py-1.5 rounded-lg text-xs border border-slate-700 shadow-md cursor-pointer transition-all active:scale-95"
+                >
+                  <User size={12} className="text-indigo-400" />
+                  개인정보 변경
+                </button>
               </div>
 
               {/* 통계 카드 */}
@@ -275,6 +295,16 @@ export default function MyPage() {
       <aside className="hidden xl:block fixed top-32 right-8 w-64 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-lg p-5 hover:shadow-xl hover:border-slate-700/50 z-30 transition-all duration-300">
         <IllegalBanners />
       </aside>
+
+      {/* 개인정보 변경 모달 */}
+      <UpdateProfileModal
+        isOpen={isUpdateProfileOpen}
+        onClose={() => setIsUpdateProfileOpen(false)}
+        currentUser={user}
+        onUpdateSuccess={(updatedUser) => {
+          setUser(updatedUser);
+        }}
+      />
     </main>
   );
 }

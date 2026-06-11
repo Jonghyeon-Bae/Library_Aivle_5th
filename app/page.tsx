@@ -79,6 +79,26 @@ export default function Home() {
     alert('로그아웃되었습니다.');
   }, []);
 
+  const handleRequireLogin = useCallback(() => {
+    alert('로그인이 필요한 서비스입니다.');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsLoginOpen(true);
+  }, []);
+
+  const checkAuth = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      if (!token || !savedUser || !user) {
+        handleRequireLogin();
+        return false;
+      }
+    }
+    return true;
+  }, [user, handleRequireLogin]);
+
   // 1. 도서 목록 조회 (Read)
   const { data, isPending } = useQuery({
     queryKey: ['books', sortOption, page],
@@ -123,12 +143,22 @@ export default function Home() {
   }, [page, totalPages]);
 
   // 2. 도서 삭제 (Delete)
+  // 수정_종현_04 도서 삭제 결과(성공/실패)에 대한 안내 메시지 보완
   const deleteMutation = useMutation({
     mutationFn: (id:string) => deleteBook(id),
     onSuccess: () => {
+      alert('도서가 성공적으로 삭제되었습니다.');
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
     },
+    onError: (error: any) => {
+      const errMsg = error?.response?.data?.message;
+      if (errMsg === 'You do not have permission to modify or delete this resource.') {
+        alert('도서를 등록한 본인만 삭제할 수 있습니다.');
+      } else {
+        alert(errMsg || '도서 삭제 중 오류가 발생했습니다.');
+      }
+    }
   });
 
   // 3. 대출 상태 토글 (Update)
@@ -245,13 +275,21 @@ export default function Home() {
             )}
 
             <button 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={() => {
+                if (checkAuth()) {
+                  setIsModalOpen(true);
+                }
+              }} 
               className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
             >
               Search!
             </button>
             <button 
-              onClick={() => setIsManualModalOpen(true)} 
+              onClick={() => {
+                if (checkAuth()) {
+                  setIsManualModalOpen(true);
+                }
+              }} 
               className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
             >
               CreatorMode!
@@ -279,6 +317,7 @@ export default function Home() {
             onDelete={() => setSelectedBook(null)}
             onUpdateBook={setSelectedBook}
             currentUser={user}
+            onRequireLogin={handleRequireLogin}
           />
         ) : (
           <BookListView
@@ -292,6 +331,7 @@ export default function Home() {
             setPage={setPage}
             deleteMutation={deleteMutation}
             currentUser={user}
+            onRequireLogin={handleRequireLogin}
           />
         )}
 

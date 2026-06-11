@@ -9,23 +9,26 @@ const BookListView = memo(function BookListView({
     totalPages,
     page,
     visiblePages,
-sortOption,
-setPressSetSelectedBook,
-setSortOption,
-setPage,
-deleteMutation,
-currentUser 
+    sortOption,
+    setPressSetSelectedBook,
+    setSortOption,
+    setPage,
+    deleteMutation,
+    currentUser,
+    onRequireLogin
 }: {
-books: bookProps[]
-totalPages: number
-page: number
-visiblePages: number[]
-sortOption: string
-setPressSetSelectedBook: (book: bookProps) => void
-setSortOption: (option: string) => void
-setPage: (pageNum: number) => void
-deleteMutation: any
-currentUser: any }) {
+    books: bookProps[]
+    totalPages: number
+    page: number
+    visiblePages: number[]
+    sortOption: string
+    setPressSetSelectedBook: (book: bookProps) => void
+    setSortOption: (option: string) => void
+    setPage: (pageNum: number) => void
+    deleteMutation: any
+    currentUser: any
+    onRequireLogin?: () => void
+}) {
 
 return(
         <>
@@ -81,7 +84,11 @@ return(
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-
+                    if (!currentUser) {
+                      if (onRequireLogin) onRequireLogin();
+                      else alert('로그인이 필요합니다.');
+                      return;
+                    }
                     if(confirm('정말 삭제하시겠습니까?')) {
                       deleteMutation.mutate(book.id);
                     }
@@ -108,7 +115,7 @@ return(
                   <p className="text-sm text-gray-500 mt-1 line-clamp-1">{book.author} | {book.publisher}</p>
 
                   <div onClick={(e) => e.stopPropagation()}>
-                    <LikeButton bookId={book.id} initialLikeCount={book.like_count || 0} currentUser={currentUser} />
+                    <LikeButton bookId={book.id} initialLikeCount={book.like_count || 0} currentUser={currentUser} onRequireLogin={onRequireLogin} />
                   </div>
 
                 </div>
