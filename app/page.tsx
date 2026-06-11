@@ -122,12 +122,28 @@ export default function Home() {
     return pages;
   }, [page, totalPages]);
 
-  // 2. 도서 삭제 (Delete)
+  // 2. 도서 삭제 (Delete) (F1 - 에러 시 alert 추가)
   const deleteMutation = useMutation({
-    mutationFn: (id:string) => deleteBook(id),
+    mutationFn: (id: string) => deleteBook(id),
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['books-dashboard'] });
+    },
+
+    onError: (error: any) => {
+      console.error('도서 삭제 실패:', error);
+
+      if (error.response?.status === 403) {
+        alert('자신이 등록한 도서만 삭제할 수 있습니다!');
+        return;
+      }
+
+      if (error.response?.status === 401) {
+        return;
+      }
+
+      alert('도서 삭제 중 오류가 발생했습니다.');
     },
   });
 

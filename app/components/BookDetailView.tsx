@@ -10,6 +10,18 @@ interface MutationLike<T>{
   isPending?: boolean;
 }
 
+// 도서 삭제 전용 Mutation F2
+interface DeleteMutationLike<T> {
+  mutate: (
+    args: T,
+    options?: {
+      onSuccess?: () => void;
+    }
+  ) => void;
+
+  isPending?: boolean;
+}
+
 export default function BookDetailView({ 
   selectedBook,
   onBack,
@@ -22,7 +34,7 @@ export default function BookDetailView({
   selectedBook: bookProps
   onBack: () => void
   toggleMutation: MutationLike<{ id: string; isAvailable?: boolean; borrower_id?: string }>
-  deleteMutation: MutationLike<string> 
+  deleteMutation: DeleteMutationLike<string> // 도서 삭제 전용 Mutation으로 변경 F3
   onDelete: (id: string) => void
   onUpdateBook?: (book: bookProps) => void 
   currentUser: any
@@ -232,10 +244,22 @@ export default function BookDetailView({
           )}
         </p>
       </div>
-
+      {/* 상세 화면 도서 삭제시 바로 메인으로 안가고 삭제 확인 후 삭제 처리되게 수정 F4 */}
       <div className="mt-6 flex justify-end">
-        <button onClick={() => { if (confirm("정말 삭제하시겠습니까?")) { deleteMutation.mutate(selectedBook.id); onDelete(selectedBook.id); } }} className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600">
-          도서 삭제
+        <button
+          onClick={() => {
+            if (confirm('정말 삭제하시겠습니까?')) {
+              deleteMutation.mutate(selectedBook.id, {
+                onSuccess: () => {
+                  onDelete(selectedBook.id);
+                },
+              });
+            }
+          }}
+          disabled={deleteMutation.isPending}
+          className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {deleteMutation.isPending ? '삭제 중...' : '도서 삭제'}
         </button>
       </div>
 
