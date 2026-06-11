@@ -24,20 +24,23 @@ export default function MyPage() {
   const perPage = 8;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
-      if (token && savedUser) {
-        setUser(JSON.parse(savedUser));
-      } else {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-        alert('로그인이 필요합니다.');
-        router.push('/');
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('user');
+        if (token && savedUser) {
+          setUser(JSON.parse(savedUser));
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          alert('로그인이 필요합니다.');
+          router.push('/');
+        }
       }
-    }
-    setIsHydrated(true);
+      setIsHydrated(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [router]);
 
   // 내가 등록한 도서 — 페이지네이션 적용

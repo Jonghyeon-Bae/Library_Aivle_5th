@@ -63,9 +63,12 @@ export default function ManualAddBookModal({ isOpen, onClose, currentUser }: Man
 
   // AI 패널 토글 시 프롬프트 초기화 (제목/설명 변경 시에도 갱신)
   useEffect(() => {
-    if (showAiPanel && formData.title) {
-      setAiPrompt(getPromptForStyle(selectedStyle));
-    }
+    const timer = setTimeout(() => {
+      if (showAiPanel && formData.title) {
+        setAiPrompt(getPromptForStyle(selectedStyle));
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [showAiPanel, formData.title, formData.contents]);
 
   // 로딩 단계 텍스트 회전 애니메이션
