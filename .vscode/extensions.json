@@ -8,7 +8,7 @@
         "formulahendry.auto-close-tag",
         "formulahendry.auto-rename-tag",
         "vscjava.vscode-java-pack", // 자바 개발 종합 패키지
-        "redhat.java", // 자바 언어 지원
-        "dotjoshjohnson.xml" // XML 포맷 지원
+        "redhat.java", // 자바 언어 지원  
+        "dotjoshjohnson.xml" // XML 포맷 지원 
     ]
 }
