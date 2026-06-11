@@ -278,7 +278,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
             
             {/* 1. 내가 찾은 검색어 (유저 데이터) */}
             <div className="flex flex-col gap-2">
-            {/* 검색 기록 전체 삭제 버튼 추가 (추가F-6)*/}
+            {/* 검색 기록 전체 삭제 버튼 추가 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-sm font-bold text-gray-700 gap-1.5">
                   <Clock size={15} />
@@ -312,7 +312,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
                 </button>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {/* 특정 검색 기록 삭제 버튼 추가 F3 */}
+              {/* 특정 검색 기록 삭제 버튼 추가 (F3) */}
               {recentSearches.map((item: any) => (
                 <div
                   key={item.id}
