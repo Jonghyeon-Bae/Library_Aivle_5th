@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSearchHistory, createSearchHistory, createBook, checkDuplicateIsbn13, deleteAllSearchHistory } from '../lib/bookApi';
+import { getSearchHistory, createSearchHistory, createBook, checkDuplicateIsbn13, deleteAllSearchHistory, deleteSearchHistory } from '../lib/bookApi';
 import { searchBookFromAladin, lookupBookMetricsFromAladin } from '../lib/aladinApi';
 import { Search, X, Clock, Loader2, Sparkles, RefreshCw, Trash2} from 'lucide-react';
 import { bookProps } from '../page';
@@ -52,7 +52,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
   // 불러온 데이터에서 items 배열만 추출 (없으면 빈 배열)
   const recentSearches = historyData?.items || [];
 
-  // 특정 사용자의 검색 기록 전체 삭제 (추가F-5))
+  // 특정 사용자의 검색 기록 전체 삭제
   const deleteHistoryMutation = useMutation({
     mutationFn: () => {
       if (!currentUser?.id) {
@@ -76,6 +76,32 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
 
     onError: (error) => {
       console.error('검색 기록 전체 삭제 실패:', error);
+      alert('검색 기록 삭제 중 오류가 발생했습니다.');
+    },
+  });
+
+  // 특정 검색 기록 삭제  (F2)
+  const deleteOneHistoryMutation = useMutation({
+    mutationFn: (keyword: string) => {
+      if (!currentUser?.id) {
+        throw new Error('로그인이 필요합니다.');
+      }
+
+      return deleteSearchHistory(currentUser.id, keyword);
+    },
+
+    onSuccess: (data) => {
+      console.log(data);
+
+      queryClient.invalidateQueries({
+        queryKey: ['searchHistory', currentUser?.id],
+      });
+
+      setAiRecommendations([]);
+    },
+
+    onError: (error) => {
+      console.error('검색 기록 삭제 실패:', error);
       alert('검색 기록 삭제 중 오류가 발생했습니다.');
     },
   });
@@ -252,7 +278,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
             
             {/* 1. 내가 찾은 검색어 (유저 데이터) */}
             <div className="flex flex-col gap-2">
-            {/* 검색 기록 전체 삭제 버튼 추가 (추가F-6)*/}
+            {/* 검색 기록 전체 삭제 버튼 추가 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-sm font-bold text-gray-700 gap-1.5">
                   <Clock size={15} />
@@ -286,19 +312,40 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
                 </button>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {recentSearches.map((item: any) => (
+              {/* 특정 검색 기록 삭제 버튼 추가 (F3) */}
+              {recentSearches.map((item: any) => (
+                <div
+                  key={item.id}
+                  className="flex items-center bg-white border border-gray-200 text-sm rounded-full text-gray-600 hover:border-blue-500 transition whitespace-nowrap shadow-sm overflow-hidden"
+                >
+                  {/* 검색어 클릭 영역 */}
                   <button
-                    key={item.id}
+                    type="button"
                     onClick={() => {
                       setKeyword(item.keyword);
                       handleSearch(item.keyword);
                     }}
-                    className="px-3 py-1.5 bg-white border border-gray-200 text-sm rounded-full text-gray-600 hover:border-blue-500 hover:text-blue-600 transition whitespace-nowrap shadow-sm"
+                    className="pl-3 pr-1.5 py-1.5 hover:text-blue-600 transition"
                   >
                     {item.keyword}
                   </button>
-                ))}
-              </div>
+
+                  {/* 개별 검색 기록 삭제 */}
+                  <button
+                    type="button"
+                    aria-label={`${item.keyword} 검색 기록 삭제`}
+                    title="검색 기록 삭제"
+                    onClick={() => {
+                      deleteOneHistoryMutation.mutate(item.keyword);
+                    }}
+                    disabled={deleteOneHistoryMutation.isPending}
+                    className="pr-2 py-1.5 text-gray-400 hover:text-red-600 disabled:opacity-50 transition"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
             </div>
 
             {/* 2. AI 맞춤 추천 영역 */}
