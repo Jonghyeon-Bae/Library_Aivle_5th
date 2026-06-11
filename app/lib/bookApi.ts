@@ -112,10 +112,19 @@ export async function updateBookCover(id: string, coverDataUrl: string) {
   return data;
 }
 
-// 13. 검색 기록 전체 삭제 (DELETE) (추가F-4)
+// 13. 검색 기록 전체 삭제 (DELETE)
 export async function deleteAllSearchHistory(userId: string) {
   const { data } = await apiClient.delete('/api/search-history', {
     params: { userId },
+  });
+
+  return data;
+}
+
+// 특정 검색 기록 삭제 (DELETE) (F1)
+export async function deleteSearchHistory(userId: string, keyword: string) {
+  const { data } = await apiClient.delete<string>('/api/search-history/keyword',{
+    params: {userId, keyword,},
   });
 
   return data;
