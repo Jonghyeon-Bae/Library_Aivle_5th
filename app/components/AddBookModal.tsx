@@ -145,7 +145,11 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
       setResults([])
       setKeyword('')
       setAiRecommendations([])
+      setRegisteringIdx(null); // 수정_최승헌_로딩인덱스초기화
     },
+    onError: () => {
+      setRegisteringIdx(null); // 수정_최승헌_로딩인덱스초기화
+    }
   });
 
   // 최승헌 추가 isbn13 기준 중복 확인 함수
@@ -198,12 +202,14 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
         // 등록 전 DB에 같은 isbn13의 책이 있는지 확인
         if (!book.isbn13) {
           alert('ISBN13 정보가 없는 도서입니다.');
+          setRegisteringIdx(null); // 수정_최승헌_중도탈출초기화
           return;
         }
         const isDuplicate = await checkIsbnDuplicate(book.isbn13);
 
         if (isDuplicate) {
           alert('이미 등록된 책입니다.');
+          setRegisteringIdx(null); // 수정_최승헌_중도탈출초기화
           return;
         }
         // 1. 가져온 isbn13을 이용해 상품 상세 조회 API 호출 (평점, 판매지수 확보)
@@ -226,11 +232,19 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
           ? `[자동 추천] 평점 ${metrics.customerReviewRank}점, 판매지수 ${metrics.salesPoint}점의 검증된 우수 명작입니다.` 
           : `평점 ${metrics.customerReviewRank}점의 서재 보관 도서입니다.`
         
+      }, {
+        onSuccess: () => {
+          setRegisteringIdx(null); // 수정_최승헌_뮤테이션성공초기화
+        },
+        onError: () => {
+          setRegisteringIdx(null); // 수정_최승헌_뮤테이션실패초기화
+        }
       });
 
     } catch (error) {
       console.error("도서 정보 조회 실패:", error);
       alert("도서 평가 지표를 가져오는 중 오류가 발생했습니다.");
+      setRegisteringIdx(null); // 수정_최승헌_예외발생초기화
     } 
   };
     
@@ -240,16 +254,16 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
       <div className="bg-white rounded-xl w-full max-w-xl max-h-[80vh] flex flex-col">
         <div className="p-4 border-b flex justify-between">
-          <h2 className="font-bold">도서 검색 및 등록 (알라딘 자동 추천 시스템)</h2>
+          <h2 className="font-bold text-red-500">도서 검색 및 등록 (알라딘 자동 추천 시스템)</h2>
           <button onClick={()=>{
             onClose()
             setResults([])
             setKeyword('')
             setAiRecommendations([])
-          }}><X size={20}/></button>
+          }}><X size={20} className="text-black"/></button>
         </div>
         
-        <div className="p-4 flex gap-2 border-b">
+        <div className="p-4 flex gap-2 border-b text-black">
           <input 
             value={keyword} onChange={(e) => setKeyword(e.target.value)}
             className="flex-1 border p-2 rounded" placeholder="책 제목을 검색하세요"
@@ -392,7 +406,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
               {/* 알라딘 API는 이미지 키가 thumbnail이 아닌 cover로 제공됨 */}
               <img src={book.cover || book.thumbnail || "https://via.placeholder.com/50"} alt="표지" className="w-12 object-cover" />
               <div className="flex-1">
-                <p className="font-bold line-clamp-1">{book.title}</p>
+                <p className="font-bold line-clamp-1 text-black">{book.title}</p>
                 <p className="text-sm text-gray-500">{book.author} | {book.publisher}</p>
               </div>
 

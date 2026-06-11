@@ -25,4 +25,22 @@ apiClient.interceptors.request.use(
   }
 );
 
+// 응답 인터셉터 추가 (토큰 만료 시 자동 로그아웃 처리)
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default apiClient;

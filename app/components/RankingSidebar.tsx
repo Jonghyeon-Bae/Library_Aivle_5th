@@ -65,14 +65,14 @@ const RankingSidebar = memo(function RankingSidebar({ onBookSelect }: RankingSid
             <li
               key={book.id}
               onClick={() => handleBookClick(book)}
-              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all duration-200 cursor-pointer group"
+              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-800/80 border border-transparent hover:border-slate-800 transition-all duration-200 cursor-pointer group"
             >
               {/* 순위 표시: 1-3위는 트로피, 그 외는 숫자 */}
               <div className="shrink-0 w-6 h-6 flex items-center justify-center">
                 {isTop3 ? (
                   <Trophy size={18} className={`${trophyColor} transition-transform duration-300`} />
                 ) : (
-                  <span className="text-xs font-bold text-slate-400 group-hover:text-slate-600">
+                  <span className="text-xs font-bold text-slate-500 group-hover:text-slate-300">
                     {idx + 1}
                   </span>
                 )}
@@ -81,19 +81,19 @@ const RankingSidebar = memo(function RankingSidebar({ onBookSelect }: RankingSid
               {/* 책 정보 */}
               <div className="flex-1 min-w-0">
                 <p
-                  className="text-xs font-bold text-slate-700 group-hover:text-indigo-600 transition-colors truncate"
+                  className="text-xs font-bold text-slate-300 group-hover:text-indigo-400 transition-colors truncate"
                   title={book.title}
                 >
                   {book.title}
                 </p>
-                <p className="text-[10px] text-slate-400 truncate">
+                <p className="text-[10px] text-slate-500 truncate">
                   {book.author}
                 </p>
               </div>
 
               {/* 좋아요 개수 */}
               <div className="shrink-0">
-                <span className="flex items-center gap-0.5 text-[10px] text-pink-500 bg-pink-50 px-2 py-0.5 rounded-full font-bold transition-transform group-hover:scale-105">
+                <span className="flex items-center gap-0.5 text-[10px] text-pink-400 bg-pink-950/30 px-2 py-0.5 rounded-full font-bold transition-transform group-hover:scale-105">
                   <Heart size={8} fill="currentColor" />
                   {book.like_count ?? 0}
                 </span>
@@ -108,10 +108,10 @@ const RankingSidebar = memo(function RankingSidebar({ onBookSelect }: RankingSid
   return (
     <>
       {/* 1. 데스크톱 뷰 (화면 좌측 고정 플로팅 사이드바) */}
-      <aside className="hidden xl:block fixed top-32 left-8 w-64 bg-white/90 backdrop-blur-md border border-slate-100 rounded-2xl shadow-lg p-5 transition-all duration-300 hover:shadow-xl hover:border-slate-200/60 z-30">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
-          <Award size={18} className="text-indigo-500" />
-          <h3 className="font-extrabold text-slate-800 text-sm tracking-tight">인기 도서 TOP 10</h3>
+      <aside className="hidden xl:block fixed top-32 left-8 w-64 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-lg p-5 transition-all duration-300 hover:shadow-xl hover:border-slate-700/50 z-30">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
+          <Award size={18} className="text-indigo-400" />
+          <h3 className="font-extrabold text-slate-200 text-sm tracking-tight">인기 도서 TOP 10</h3>
         </div>
         {renderRankingList()}
       </aside>
