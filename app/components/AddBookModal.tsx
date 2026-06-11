@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSearchHistory, createSearchHistory, createBook, checkDuplicateIsbn13 } from '../lib/bookApi';
+import { getSearchHistory, createSearchHistory, createBook, checkDuplicateIsbn13, deleteAllSearchHistory } from '../lib/bookApi';
 import { searchBookFromAladin, lookupBookMetricsFromAladin } from '../lib/aladinApi';
-import { Search, X, Clock, Loader2, Sparkles, RefreshCw } from 'lucide-react';
+import { Search, X, Clock, Loader2, Sparkles, RefreshCw, Trash2} from 'lucide-react';
 import { bookProps } from '../page';
 import axios from 'axios';
 
@@ -51,6 +51,34 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
 
   // 불러온 데이터에서 items 배열만 추출 (없으면 빈 배열)
   const recentSearches = historyData?.items || [];
+
+  // 특정 사용자의 검색 기록 전체 삭제 (추가F-5))
+  const deleteHistoryMutation = useMutation({
+    mutationFn: () => {
+      if (!currentUser?.id) {
+        throw new Error('로그인이 필요합니다.');
+      }
+
+      return deleteAllSearchHistory(currentUser.id);
+    },
+
+    onSuccess: (message) => {
+      // 검색 기록을 다시 불러와 화면에서도 즉시 제거
+      queryClient.invalidateQueries({
+        queryKey: ['searchHistory', currentUser?.id],
+      });
+
+      // 과거 검색 기록을 기반으로 생성된 AI 추천어도 초기화
+      setAiRecommendations([]);
+
+      alert(message || '사용자 검색 기록 전체 삭제 완료');
+    },
+
+    onError: (error) => {
+      console.error('검색 기록 전체 삭제 실패:', error);
+      alert('검색 기록 삭제 중 오류가 발생했습니다.');
+    },
+  });
 
   // [AI 추천 추가] AI 추천 검색어를 백엔드 API에서 가져오는 함수 추가
   const getAiRecommendations = async () => {
@@ -141,7 +169,7 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
     setRegisteringIdx(idx); // 현재 등록 중인 버튼 로딩 활성화
 
     try {
-        // 추가_최승헌 등록 전 DB에 같은 isbn13의 책이 있는지 확인
+        // 등록 전 DB에 같은 isbn13의 책이 있는지 확인
         if (!book.isbn13) {
           alert('ISBN13 정보가 없는 도서입니다.');
           return;
@@ -152,7 +180,6 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
           alert('이미 등록된 책입니다.');
           return;
         }
-        // 추가완료_최승헌
         // 1. 가져온 isbn13을 이용해 상품 상세 조회 API 호출 (평점, 판매지수 확보)
         const metrics = await lookupBookMetricsFromAladin(book.isbn13);
 
@@ -211,9 +238,38 @@ export default function AddBookModal({ isOpen, onClose, currentUser }:AddBookMod
             
             {/* 1. 내가 찾은 검색어 (유저 데이터) */}
             <div className="flex flex-col gap-2">
-              <div className="flex items-center text-sm font-bold text-gray-700 gap-1.5">
-                <Clock size={15} />
-                <span>내가 찾은 검색어</span>
+            {/* 검색 기록 전체 삭제 버튼 추가 (추가F-6)*/}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-sm font-bold text-gray-700 gap-1.5">
+                  <Clock size={15} />
+                  <span>내가 찾은 검색어</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isConfirmed =
+                      window.confirm('검색 기록을 모두 삭제하시겠습니까?');
+
+                    if (isConfirmed) {
+                      deleteHistoryMutation.mutate();
+                    }
+                  }}
+                  disabled={deleteHistoryMutation.isPending}
+                  className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  {deleteHistoryMutation.isPending ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      삭제 중...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={13} />
+                      검색 기록 전체 삭제
+                    </>
+                  )}
+                </button>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {recentSearches.map((item: any) => (
