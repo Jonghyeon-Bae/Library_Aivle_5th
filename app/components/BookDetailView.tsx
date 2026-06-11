@@ -120,7 +120,7 @@ export default function BookDetailView({
     <section className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       {/* 상단, 메인, 책 소개 영역은 수정할 필요 없으므로 기존 코드 그대로 사용합니다 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <button onClick={onBack} className="w-fit px-4 py-2 rounded-lg border text-sm font-bold hover:bg-gray-100">
+        <button onClick={onBack} className="w-fit px-4 py-2 rounded-lg border text-sm font-bold hover:bg-gray-100 text-black">
           ← 목록으로
         </button>
         <div className="flex flex-wrap gap-2">
