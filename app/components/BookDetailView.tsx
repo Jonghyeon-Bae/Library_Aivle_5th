@@ -6,7 +6,7 @@ import { Sparkles, Palette } from 'lucide-react';
 import { getBookById, updateBookReview } from '../lib/bookApi';
 
 interface MutationLike<T>{
-  mutate: (args: T) => void;
+  mutate: (args: T, options?: { onSuccess?: () => void }) => void;
   isPending?: boolean;
 }
 
@@ -289,9 +289,13 @@ export default function BookDetailView({
               else alert('로그인이 필요합니다.');
               return;
             }
+            // 수정_Antigravity_4 도서 삭제 실패 시 상세 뷰가 닫히는(메인 페이지로 이동하는) 오류 수정: onDelete는 onSuccess 콜백 내에서만 실행되도록 변경
             if (confirm("정말 삭제하시겠습니까?")) { 
-              deleteMutation.mutate(selectedBook.id); 
-              onDelete(selectedBook.id); 
+              deleteMutation.mutate(selectedBook.id, {
+                onSuccess: () => {
+                  onDelete(selectedBook.id); 
+                }
+              }); 
             } 
           }} 
           className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600"
