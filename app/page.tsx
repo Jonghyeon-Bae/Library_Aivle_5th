@@ -55,18 +55,21 @@ export default function Home() {
   const perPage = 8;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
-      if (token && savedUser) {
-        setUser(JSON.parse(savedUser));
-      } else {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('user');
+        if (token && savedUser) {
+          setUser(JSON.parse(savedUser));
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
       }
-    }
-    setIsHydrated(true);
+      setIsHydrated(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -152,8 +155,9 @@ export default function Home() {
     },
   });
 
+  // 수정_최승헌_5-3 메인 페이지 다크 테마 배경 및 레이아웃 구조 수정
   return (
-    <main className="max-w-5xl mx-auto p-8">
+    <main className="min-h-screen bg-[#030712] text-slate-100">
       {/* 5조 전광판 무한 마키 롤링 배너 — 추가_최승헌_불법배너 */}
       <div className="w-full bg-slate-950 border-y border-purple-500/30 overflow-hidden py-2 select-none relative mb-6 rounded-lg">
         <div className="flex w-max animate-marquee text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-400 to-cyan-400 gap-8 py-1">
@@ -162,166 +166,168 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 최상단 B급 띠 광고 영역 — 추가_최승헌_불법배너 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        {/* 광고 1: 2차 에이블데이 */}
-        <div 
-          onClick={() => alert('🏆 [2차 에이블데이] 에이블러의 열정을 보여줄 기회! 9기 5조 1등 기원! 대박 기원!')}
-          className="cursor-pointer p-2.5 rounded-lg border-2 border-red-500 animate-rapid-blink text-center text-xs font-black text-yellow-300 select-none shadow-md flex items-center justify-center gap-1.5"
-        >
-          <span className="bg-yellow-400 text-black px-1.5 py-0.5 rounded text-[9px] animate-bounce shrink-0">대박개최</span>
-          🏆 [속보] KT AIVLE 9기 2차 에이블데이 곧 개최! &apos;5조, 이번엔 진짜 1등 먹튀간다!&apos; 🚀
+      <div className="max-w-5xl mx-auto p-8">
+        {/* 최상단 B급 띠 광고 영역 — 추가_최승헌_불법배너 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          {/* 광고 1: 2차 에이블데이 */}
+          <div 
+            onClick={() => alert('🏆 [2차 에이블데이] 에이블러의 열정을 보여줄 기회! 9기 5조 1등 기원! 대박 기원!')}
+            className="cursor-pointer p-2.5 rounded-lg border-2 border-red-500 animate-rapid-blink text-center text-xs font-black text-yellow-300 select-none shadow-md flex items-center justify-center gap-1.5"
+          >
+            <span className="bg-yellow-400 text-black px-1.5 py-0.5 rounded text-[9px] animate-bounce shrink-0">대박개최</span>
+            🏆 [속보] KT AIVLE 9기 2차 에이블데이 곧 개최! &apos;5조, 이번엔 진짜 1등 먹튀간다!&apos; 🚀
+          </div>
+          {/* 광고 2: AIVLE 스쿨 9기 */}
+          <a 
+            href="https://aivle.kt.co.kr" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-2.5 rounded-lg border-2 border-[#ff007f] bg-black text-[#00f0ff] animate-neon-border text-center text-xs font-bold select-none shadow-md flex items-center justify-center gap-1.5 hover:underline"
+          >
+            <span className="bg-[#ff007f] text-white px-1.5 py-0.5 rounded text-[9px] shrink-0">공식모집</span>
+            🤖 KT AIVLE 스쿨 10기 전격 모집 준비중! 100% 국비 전액 무료 ➔ 즉시 지원하기 🤖
+          </a>
         </div>
-        {/* 광고 2: AIVLE 스쿨 9기 */}
-        <a 
-          href="https://aivle.kt.co.kr" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="p-2.5 rounded-lg border-2 border-[#ff007f] bg-black text-[#00f0ff] animate-neon-border text-center text-xs font-bold select-none shadow-md flex items-center justify-center gap-1.5 hover:underline"
-        >
-          <span className="bg-[#ff007f] text-white px-1.5 py-0.5 rounded text-[9px] shrink-0">공식모집</span>
-          🤖 KT AIVLE 스쿨 10기 전격 모집 준비중! 100% 국비 전액 무료 ➔ 즉시 지원하기 🤖
-        </a>
-      </div>
 
-      {/* 헤더 영역 */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-gray-100">
-        
-        <Link href="/" className=" items-center gap-3">
-        <div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-bounce">📚 5조의 도서관<span className='text-red-300'></span></h1>
-          <p className="animate-shine font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-400 via-red-500 to-slate-400  mt-2">그들의 취미생활....</p>
-        </div>
-        </Link>
+        {/* 헤더 영역 */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-gray-100/10">
+          
+          <Link href="/" className=" items-center gap-3">
+          <div>
+            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-bounce">📚 5조의 도서관<span className='text-red-300'></span></h1>
+            <p className="animate-shine font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-400 via-red-500 to-slate-400  mt-2">그들의 취미생활....</p>
+          </div>
+          </Link>
 
-        {/* Buttons / Auth Section */}
-        <div className="flex items-center gap-3 self-end md:self-auto">
-          {isHydrated && user ? (
-            <>
-              <span className="text-sm font-semibold text-slate-200 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center">
-                {user.name || user.email}
-              </span>
-              <Link
-                href="/me"
-                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
-              >
-                <User size={16} />
-                마이페이지
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="cursor-pointer flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
-              >
-                <LogOut size={16} />
-                로그아웃
-              </button>
-            </>
-          ) : (
-            isHydrated && (
+          {/* Buttons / Auth Section */}
+          <div className="flex items-center gap-3 self-end md:self-auto">
+            {isHydrated && user ? (
               <>
-                <button
-                  onClick={() => setIsRegisterOpen(true)}
-                  className="cursor-pointer flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
+                <span className="text-sm font-semibold text-slate-200 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center">
+                  {user.name || user.email}
+                </span>
+                <Link
+                  href="/me"
+                  className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
                 >
-                  <UserPlus size={16} />
-                  회원가입
-                </button>
-
+                  <User size={16} />
+                  마이페이지
+                </Link>
                 <button
-                  onClick={() => setIsLoginOpen(true)}
-                  className="cursor-pointer flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
+                  onClick={handleLogout}
+                  className="cursor-pointer flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
                 >
-                  <LogIn size={16} />
-                  로그인
+                  <LogOut size={16} />
+                  로그아웃
                 </button>
-
               </>
-            )
-          )}
+            ) : (
+              isHydrated && (
+                <>
+                  <button
+                    onClick={() => setIsRegisterOpen(true)}
+                    className="cursor-pointer flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
+                  >
+                    <UserPlus size={16} />
+                    회원가입
+                  </button>
 
-          <button 
-            onClick={() => setIsModalOpen(true)} 
-            className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
-          >
-            Search!
-          </button>
-          <button 
-            onClick={() => setIsManualModalOpen(true)} 
-            className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
-          >
-            CreatorMode!
-          </button>
+                  <button
+                    onClick={() => setIsLoginOpen(true)}
+                    className="cursor-pointer flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-colors"
+                  >
+                    <LogIn size={16} />
+                    로그인
+                  </button>
+
+                </>
+              )
+            )}
+
+            <button 
+              onClick={() => setIsModalOpen(true)} 
+              className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
+            >
+              Search!
+            </button>
+            <button 
+              onClick={() => setIsManualModalOpen(true)} 
+              className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
+            >
+              CreatorMode!
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* 대시보드 차트 (전체 데이터 기준) */}
-      <DashboardChart books={allBooks} />
+        {/* 대시보드 차트 (전체 데이터 기준) */}
+        <DashboardChart books={allBooks} />
 
-      {/* 모바일용 불법 배너 광고 보드 — 추가_최승헌_불법배너 */}
-      <div className="xl:hidden my-6 z-50 relative">
-        <IllegalBanners />
-      </div>
-    
-      {/* 로딩 상태 */}
-      {isPending && <p className="text-center py-10 text-gray-500 text-lg">책장을 불러오는 중입니다... 🔄</p>}
+        {/* 모바일용 불법 배너 광고 보드 — 추가_최승헌_불법배너 */}
+        <div className="xl:hidden my-6 z-50 relative">
+          <IllegalBanners />
+        </div>
+      
+        {/* 로딩 상태 */}
+        {isPending && <p className="text-center py-10 text-gray-500 text-lg">책장을 불러오는 중입니다... 🔄</p>}
 
-      {selectedBook ? (
-        <BookDetailView 
-          selectedBook={selectedBook}
-          onBack={() => setSelectedBook(null)}
-          toggleMutation={toggleMutation}
-          deleteMutation={deleteMutation}
-          onDelete={() => setSelectedBook(null)}
-          onUpdateBook={setSelectedBook}
-          currentUser={user}
+        {selectedBook ? (
+          <BookDetailView 
+            selectedBook={selectedBook}
+            onBack={() => setSelectedBook(null)}
+            toggleMutation={toggleMutation}
+            deleteMutation={deleteMutation}
+            onDelete={() => setSelectedBook(null)}
+            onUpdateBook={setSelectedBook}
+            currentUser={user}
+          />
+        ) : (
+          <BookListView
+            books={books}
+            totalPages={totalPages}
+            page={page}
+            visiblePages={visiblePages}
+            sortOption={sortOption}
+            setPressSetSelectedBook={setSelectedBook}
+            setSortOption={setSortOption}
+            setPage={setPage}
+            deleteMutation={deleteMutation}
+            currentUser={user}
+          />
+        )}
+
+        {/* 등록 모달 */}
+        <AddBookModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} currentUser={user} />
+        {/* 수동 등록 모달 */}
+        <ManualAddBookModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} currentUser={user} />
+
+        {/* 로그인 모달 */}
+        <LoginModal
+          isOpen={isLoginOpen}
+          onClose={() => setIsLoginOpen(false)}
+          onRegisterClick={() => {
+            setIsLoginOpen(false);
+            setIsRegisterOpen(true);
+          }}
+          onLoginSuccess={(loggedInUser) => {
+            setUser(loggedInUser);
+            queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
+          }}
         />
-      ) : (
-        <BookListView
-          books={books}
-          totalPages={totalPages}
-          page={page}
-          visiblePages={visiblePages}
-          sortOption={sortOption}
-          setPressSetSelectedBook={setSelectedBook}
-          setSortOption={setSortOption}
-          setPage={setPage}
-          deleteMutation={deleteMutation}
-          currentUser={user}
+
+        {/* 회원가입 모달 */}
+        <RegisterModal
+          isOpen={isRegisterOpen}
+          onClose={() => setIsRegisterOpen(false)}
+          onLoginClick={() => {
+            setIsRegisterOpen(false);
+            setIsLoginOpen(true);
+          }}
+          onRegisterSuccess={(loggedInUser) => {
+            setUser(loggedInUser);
+            queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
+          }}
         />
-      )}
-
-      {/* 등록 모달 */}
-      <AddBookModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} currentUser={user} />
-      {/* 수동 등록 모달 */}
-      <ManualAddBookModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} currentUser={user} />
-
-      {/* 로그인 모달 */}
-      <LoginModal
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
-        onRegisterClick={() => {
-          setIsLoginOpen(false);
-          setIsRegisterOpen(true);
-        }}
-        onLoginSuccess={(loggedInUser) => {
-          setUser(loggedInUser);
-          queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
-        }}
-      />
-
-      {/* 회원가입 모달 */}
-      <RegisterModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-        onLoginClick={() => {
-          setIsRegisterOpen(false);
-          setIsLoginOpen(true);
-        }}
-        onRegisterSuccess={(loggedInUser) => {
-          setUser(loggedInUser);
-          queryClient.invalidateQueries({ queryKey: ['allLikeCounts'] });
-        }}
-      />
+      </div>
 
       {/* 좌측 플로팅 랭킹 사이드바 — 수정_종현_1 books prop 제거, 내부 getFullList 조회 */}
       <RankingSidebar onBookSelect={setSelectedBook} />

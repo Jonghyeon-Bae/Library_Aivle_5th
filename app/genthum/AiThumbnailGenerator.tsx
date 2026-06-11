@@ -39,9 +39,12 @@ export default function AiThumbnailGenerator({ isOpen, onClose, book, onUpdateSu
 
   // 책이 변경될 경우 프롬프트 재설정
   useEffect(() => {
-    if (book) {
-      setPrompt(getPromptForStyle(selectedStyle));
-    }
+    const timer = setTimeout(() => {
+      if (book) {
+        setPrompt(getPromptForStyle(selectedStyle));
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [book]);
 
   // 스타일 변경 처리 핸들러 (useEffect 없이 직접 상태 업데이트)
