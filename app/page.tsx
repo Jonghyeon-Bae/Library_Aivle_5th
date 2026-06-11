@@ -79,6 +79,26 @@ export default function Home() {
     alert('로그아웃되었습니다.');
   }, []);
 
+  const handleRequireLogin = useCallback(() => {
+    alert('로그인이 필요한 서비스입니다.');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsLoginOpen(true);
+  }, []);
+
+  const checkAuth = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      if (!token || !savedUser || !user) {
+        handleRequireLogin();
+        return false;
+      }
+    }
+    return true;
+  }, [user, handleRequireLogin]);
+
   // 1. 도서 목록 조회 (Read)
   const { data, isPending } = useQuery({
     queryKey: ['books', sortOption, page],
@@ -245,13 +265,21 @@ export default function Home() {
             )}
 
             <button 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={() => {
+                if (checkAuth()) {
+                  setIsModalOpen(true);
+                }
+              }} 
               className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
             >
               Search!
             </button>
             <button 
-              onClick={() => setIsManualModalOpen(true)} 
+              onClick={() => {
+                if (checkAuth()) {
+                  setIsManualModalOpen(true);
+                }
+              }} 
               className="cursor-pointer px-6 py-2 rounded-lg font-bold text-white shadow-lg animate-rapid-blink"
             >
               CreatorMode!
@@ -279,6 +307,7 @@ export default function Home() {
             onDelete={() => setSelectedBook(null)}
             onUpdateBook={setSelectedBook}
             currentUser={user}
+            onRequireLogin={handleRequireLogin}
           />
         ) : (
           <BookListView
@@ -292,6 +321,7 @@ export default function Home() {
             setPage={setPage}
             deleteMutation={deleteMutation}
             currentUser={user}
+            onRequireLogin={handleRequireLogin}
           />
         )}
 

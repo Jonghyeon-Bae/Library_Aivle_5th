@@ -7,11 +7,13 @@ import { getLikeStatus, likeBook, unlikeBook } from '../lib/likeApi';
 const LikeButton = memo(function LikeButton({ 
   bookId, 
   initialLikeCount,
-  currentUser 
+  currentUser,
+  onRequireLogin
 }: { 
   bookId: string; 
   initialLikeCount: number;
   currentUser: any;
+  onRequireLogin?: () => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -70,7 +72,11 @@ const LikeButton = memo(function LikeButton({
   return (
     <button 
       onClick={() => {
-        if (!currentUser) return alert('로그인 후 이용 가능합니다.');
+        if (!currentUser) {
+          if (onRequireLogin) onRequireLogin();
+          else alert('로그인 후 이용 가능합니다.');
+          return;
+        }
         if (toggleLikeMutation.isPending) return;
         toggleLikeMutation.mutate();
       }}
