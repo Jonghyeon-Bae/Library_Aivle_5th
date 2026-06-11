@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Aivle 5th MiniProject for Nextjs & Spring Boot",
-  description: "Books Management System for Spring Boot & Aiven CloudDB,
+  description: "Books Management System for Spring Boot & Aiven CloudDB",
 };
 
 export default function RootLayout({

@@ -1,0 +1,14 @@
+@recommended
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dsznajder.es7-react-js-snippets",
+        "formulahendry.auto-close-tag",
+        "formulahendry.auto-rename-tag",
+        "vscjava.vscode-java-pack", // 자바 개발 종합 패키지
+        "redhat.java", // 자바 언어 지원
+        "dotjoshjohnson.xml" // XML 포맷 지원
+    ]
+}
