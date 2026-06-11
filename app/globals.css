@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #030712; /* 딥 블랙 */
+  --foreground: #f3f4f6; /* 밝은 회색 */
 }
 
 @theme inline {
@@ -43,4 +43,80 @@ body {
 .animate-rapid-blink {
   /* 0.2s 간격으로 무한 반복 */
   animation: rapid-blink 0.2s ease-in-out infinite; 
+}
+
+/* 추가_최승헌_불법배너_애니메이션 */
+@keyframes neon-border {
+  0%, 100% { border-color: #ff007f; box-shadow: 0 0 8px #ff007f, inset 0 0 8px #ff007f; }
+  33% { border-color: #00f0ff; box-shadow: 0 0 8px #00f0ff, inset 0 0 8px #00f0ff; }
+  66% { border-color: #ffea00; box-shadow: 0 0 8px #ffea00, inset 0 0 8px #ffea00; }
+}
+.animate-neon-border {
+  animation: neon-border 0.8s linear infinite;
+}
+
+@keyframes crazy-shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-2px, -2px) rotate(-1deg); }
+  20% { transform: translate(3px, 0px) rotate(1deg); }
+  30% { transform: translate(0px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(2px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(2px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+.animate-crazy-shake {
+  animation: crazy-shake 0.15s linear infinite;
+}
+
+@keyframes text-flash {
+  0%, 100% { color: #ff0055; text-shadow: 0 0 10px #ff0055; }
+  25% { color: #00ff66; text-shadow: 0 0 10px #00ff66; }
+  50% { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+  75% { color: #ffff00; text-shadow: 0 0 10px #ffff00; }
+}
+.animate-text-flash {
+  animation: text-flash 0.5s linear infinite;
+}
+
+@keyframes bg-scroll {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-rainbow-bg {
+  background: linear-gradient(270deg, #ff007f, #7f00ff, #00f0ff, #ffea00);
+  background-size: 800% 800%;
+  animation: bg-scroll 4s ease infinite;
+}
+
+/* 추가_최승헌_불법배너_스크롤바 */
+.ugly-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.ugly-scrollbar::-webkit-scrollbar-track {
+  background: #090d16;
+  border-radius: 4px;
+}
+.ugly-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff007f, #ffea00, #00f0ff);
+  border-radius: 4px;
+  border: 1px solid #ff007f;
+}
+.ugly-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #00f0ff, #ffea00, #ff007f);
+}
+
+/* 추가_최승헌_불법배너_마키애니메이션 */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); } /* 무한 롤링을 위해 반으로 설정 */
+}
+.animate-marquee {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
 }

@@ -17,10 +17,10 @@ const DashboardChart = memo(function DashboardChart({ books }: { books: bookProp
   const COLORS = ['#22c55e', '#ef4444']; // 초록, 빨강
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow mb-8 flex justify-center items-center">
+    <div className="bg-slate-900/50 border border-slate-800/80 p-6 rounded-2xl shadow-lg mb-8 flex justify-center items-center backdrop-blur-sm">
       <div className="text-center mr-10">
-        <h3 className="text-xl font-bold text-gray-700">도서관 현황</h3>
-        <p className="text-sm text-gray-500 mt-2">총 {books.length}권의 도서</p>
+        <h3 className="text-xl font-bold text-slate-200">도서관 현황</h3>
+        <p className="text-sm text-slate-400 mt-2">총 {books.length}권의 도서</p>
       </div>
       <PieChart width={300} height={200}>
         <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">

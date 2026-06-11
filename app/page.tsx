@@ -9,6 +9,7 @@ import RegisterModal from './register/RegisterModal';
 import { LogIn, UserPlus, LogOut, User } from 'lucide-react';
 import RankingSidebar from './components/RankingSidebar';
 import Link from 'next/link';
+import IllegalBanners from './components/IllegalBanners';
 import BookDetailView from './components/BookDetailView';
 import BookListView from './components/BookListView';
 import ManualAddBookModal from './components/ManualAddBookModal';
@@ -55,9 +56,14 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
       const savedUser = localStorage.getItem('user');
-      if (savedUser) {
+      if (token && savedUser) {
         setUser(JSON.parse(savedUser));
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
       }
     }
     setIsHydrated(true);
@@ -148,6 +154,36 @@ export default function Home() {
 
   return (
     <main className="max-w-5xl mx-auto p-8">
+      {/* 5조 전광판 무한 마키 롤링 배너 — 추가_최승헌_불법배너 */}
+      <div className="w-full bg-slate-950 border-y border-purple-500/30 overflow-hidden py-2 select-none relative mb-6 rounded-lg">
+        <div className="flex w-max animate-marquee text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-400 to-cyan-400 gap-8 py-1">
+          <span className="shrink-0 whitespace-nowrap py-0.5">★★★ 5조 도서관 전격 리뉴얼 오픈!  ★★ 1차 에이블데이 1위 장천명 베스트셀러 독점 입고 완료! &apos;코딩? 흠 그정둔가..&apos;  ★★ 연체 시 밤길 조심 사서의 분노 폭발!  ★★ AICE 자격시험 응시료 전액 지원 신청 접수 중!  ★★ 100% 안전한 도서대출 보증! ★★★</span>
+          <span className="shrink-0 whitespace-nowrap py-0.5">★★★ 5조 도서관 전격 리뉴얼 오픈!  ★★ 1차 에이블데이 1위 장천명 베스트셀러 독점 입고 완료! &apos;코딩? 흠 그정둔가..&apos;  ★★ 연체 시 밤길 조심 사서의 분노 폭발!  ★★ AICE 자격시험 응시료 전액 지원 신청 접수 중!  ★★ 100% 안전한 도서대출 보증! ★★★</span>
+        </div>
+      </div>
+
+      {/* 최상단 B급 띠 광고 영역 — 추가_최승헌_불법배너 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+        {/* 광고 1: 2차 에이블데이 */}
+        <div 
+          onClick={() => alert('🏆 [2차 에이블데이] 에이블러의 열정을 보여줄 기회! 9기 5조 1등 기원! 대박 기원!')}
+          className="cursor-pointer p-2.5 rounded-lg border-2 border-red-500 animate-rapid-blink text-center text-xs font-black text-yellow-300 select-none shadow-md flex items-center justify-center gap-1.5"
+        >
+          <span className="bg-yellow-400 text-black px-1.5 py-0.5 rounded text-[9px] animate-bounce shrink-0">대박개최</span>
+          🏆 [속보] KT AIVLE 9기 2차 에이블데이 곧 개최! &apos;5조, 이번엔 진짜 1등 먹튀간다!&apos; 🚀
+        </div>
+        {/* 광고 2: AIVLE 스쿨 9기 */}
+        <a 
+          href="https://aivle.kt.co.kr" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-2.5 rounded-lg border-2 border-[#ff007f] bg-black text-[#00f0ff] animate-neon-border text-center text-xs font-bold select-none shadow-md flex items-center justify-center gap-1.5 hover:underline"
+        >
+          <span className="bg-[#ff007f] text-white px-1.5 py-0.5 rounded text-[9px] shrink-0">공식모집</span>
+          🤖 KT AIVLE 스쿨 10기 전격 모집 준비중! 100% 국비 전액 무료 ➔ 즉시 지원하기 🤖
+        </a>
+      </div>
+
       {/* 헤더 영역 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-gray-100">
         
@@ -162,7 +198,7 @@ export default function Home() {
         <div className="flex items-center gap-3 self-end md:self-auto">
           {isHydrated && user ? (
             <>
-              <span className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200/50 flex items-center">
+              <span className="text-sm font-semibold text-slate-200 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center">
                 {user.name || user.email}
               </span>
               <Link
@@ -220,6 +256,11 @@ export default function Home() {
 
       {/* 대시보드 차트 (전체 데이터 기준) */}
       <DashboardChart books={allBooks} />
+
+      {/* 모바일용 불법 배너 광고 보드 — 추가_최승헌_불법배너 */}
+      <div className="xl:hidden my-6 z-50 relative">
+        <IllegalBanners />
+      </div>
     
       {/* 로딩 상태 */}
       {isPending && <p className="text-center py-10 text-gray-500 text-lg">책장을 불러오는 중입니다... 🔄</p>}
@@ -284,6 +325,11 @@ export default function Home() {
 
       {/* 좌측 플로팅 랭킹 사이드바 — 수정_종현_1 books prop 제거, 내부 getFullList 조회 */}
       <RankingSidebar onBookSelect={setSelectedBook} />
+
+      {/* 우측 플로팅 불법 배너 광고 — 추가_최승헌_불법배너 */}
+      <aside className="hidden xl:block fixed top-32 right-8 w-64 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-lg p-5 hover:shadow-xl hover:border-slate-700/50 z-30 transition-all duration-300">
+        <IllegalBanners />
+      </aside>
     </main>
   );
 }
