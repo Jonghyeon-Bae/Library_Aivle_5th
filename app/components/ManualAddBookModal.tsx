@@ -261,7 +261,7 @@ export default function ManualAddBookModal({ isOpen, onClose, currentUser }: Man
         </div>
 
         {/* 폼 바디 */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 text-black">
           {/* 제목 */}
           <div>
             <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
