@@ -8,7 +8,24 @@
 
 ---
 
-## ✨ 1. 프로그램 개요 및 주요 기능 (Features)
+## 👥 1. 팀원 소개 및 역할 분담 (Team & Roles)
+
+우리 팀의 역할 분담 및 주요 기여 분야입니다.
+
+| 이름       | 역할 | 담당 업무                                                                             |
+| :--------- | :--: | :------------------------------------------------------------------------------------ |
+| **배종현** | 조장 | 검토담당자, 통합처리, AI 및 프론트엔드 연동, 프론트 유지 보수, DB 구축 총괄책임자 1   |
+| **장문경** |  PM  | 서기, 검토담당자, 통합처리 및 예외처리, 백엔드(Controller 제외), DB 구축 총괄책임자 2 |
+| **최승헌** | 팀원 | 발표자, PPT 제작자, 백엔드(Repository, Search Feature), 프론트 유지 보수              |
+| **소한민** | 팀원 | 타임키퍼, 백엔드(Controller, DTO)                                                     |
+| **고영빈** | 팀원 | 서기, 백엔드 및 예외처리(Domain, Exception)                                           |
+| **정원제** | 팀원 | 서기, 백엔드(Service)                                                                 |
+| **박민영** | 팀원 | PPT 제작자, API 테스트                                                                |
+| **정기석** | 팀원 | PPT 제작자                                                                            |
+
+---
+
+## ✨ 2. 프로그램 개요 및 주요 기능 (Features)
 
 이 프로젝트는 사용자의 편의성과 직관적인 UX를 최우선으로 고려하여 개발되었습니다.
 
@@ -41,7 +58,7 @@
 
 ---
 
-## 🛠️ 2. 기술 스택 (Tech Stack)
+## 🛠️ 3. 기술 스택 (Tech Stack)
 
 ### 💻 Frontend
 
@@ -65,11 +82,70 @@
 
 ---
 
-## 🗄️ 3. 데이터베이스 스키마 및 테이블 구조
+## 📊 4. 데이터베이스 ERD 및 스키마 구조 (Database Architecture)
 
-백엔드로 사용된 MySQL 데이터베이스의 주요 테이블 구조입니다.
+백엔드 JPA 엔티티 간의 관계를 도식화한 ERD 구조 및 MySQL 데이터베이스의 주요 테이블 구조입니다.
 
-### 👤 `users` (회원 테이블)
+### 4-1. ERD (Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    USERS ||--o{ BOOKS : "registers"
+    USERS ||--o{ BOOKS : "borrows"
+    USERS ||--o{ LIKES : "likes"
+    USERS ||--o{ SEARCH_HISTORY : "searches"
+    BOOKS ||--o{ LIKES : "liked"
+
+    USERS {
+        bigint id PK
+        varchar email UK "Not Null"
+        varchar password "Not Null"
+        varchar name "Not Null"
+        varchar avatar
+        tinyint email_visibility
+        tinyint verified
+        datetime created_at
+        datetime updated_at
+    }
+
+    BOOKS {
+        bigint id PK
+        bigint user_id FK "Not Null"
+        bigint borrower_id FK "Nullable"
+        varchar title "Not Null"
+        varchar author "Not Null"
+        varchar publisher "Not Null"
+        text contents
+        longtext thumbnail
+        tinyint is_available
+        tinyint bestbook
+        int like_count
+        text ai_review
+        varchar isbn13 UK "Nullable"
+        varchar category
+        int sales
+        datetime created_at
+        datetime updated_at
+    }
+
+    LIKES {
+        bigint id PK
+        bigint user_id FK "Not Null"
+        bigint book_id FK "Not Null"
+        datetime created_at
+    }
+
+    SEARCH_HISTORY {
+        bigint id PK
+        bigint user_id FK "Not Null"
+        varchar keyword "Not Null"
+        datetime created_at
+    }
+```
+
+### 4-2. 상세 테이블 구조
+
+#### 👤 `users` (회원 테이블)
 
 | Field Name           | Type                    | Description                 |
 | :------------------- | :---------------------- | :-------------------------- |
@@ -83,7 +159,7 @@
 | **created_at**       | datetime                | 생성 일시                   |
 | **updated_at**       | datetime                | 수정 일시                   |
 
-### 📚 `books` (도서 테이블)
+#### 📚 `books` (도서 테이블)
 
 | Field Name           | Type                    | Description                                  |
 | :------------------- | :---------------------- | :------------------------------------------- |
@@ -105,17 +181,18 @@
 | **created_at**       | datetime                | 도서 등록 일시                               |
 | **updated_at**       | datetime                | 도서 정보 수정 일시                          |
 
-### 🧡 `likes` (좋아요 매핑 테이블)
+#### 🧡 `likes` (좋아요 매핑 테이블)
 
 - `book_id`와 `user_id` 복합 Unique 제약 조건이 설정되어 사용자당 한 도서에 한 번만 좋아요가 가능합니다.
-  | Field Name | Type | Description |
-  | :--- | :--- | :--- |
-  | **id** (PK) | bigint (Auto Increment) | 좋아요 레코드 식별자 |
-  | **user_id** (FK) | bigint | 좋아요를 누른 사용자 ID (`users.id`) |
-  | **book_id** (FK) | bigint | 대상 도서 ID (`books.id`) |
-  | **created_at** | datetime | 등록 시간 |
 
-### 🔍 `search_history` (검색 기록 테이블)
+| Field Name       | Type                    | Description                          |
+| :--------------- | :---------------------- | :----------------------------------- |
+| **id** (PK)      | bigint (Auto Increment) | 좋아요 레코드 식별자                 |
+| **user_id** (FK) | bigint                  | 좋아요를 누른 사용자 ID (`users.id`) |
+| **book_id** (FK) | bigint                  | 대상 도서 ID (`books.id`)            |
+| **created_at**   | datetime                | 등록 시간                            |
+
+#### 🔍 `search_history` (검색 기록 테이블)
 
 | Field Name       | Type                    | Description                          |
 | :--------------- | :---------------------- | :----------------------------------- |
@@ -126,11 +203,37 @@
 
 ---
 
-## 🚀 4. 시작하기 (Getting Started)
+## 🔌 5. REST API 명세서 (API 정의서)
+
+모든 API 요청은 공통 Prefix인 `/api` 경로를 타며, 인증이 필요한 API는 HTTP Header에 JWT 토큰(`Authorization: Bearer <token>`)을 실어 전송합니다.
+
+| 도메인     | API명                      | Method   | URI                           | 인증(Token) | Request (Query/Body)                                             | Response (상태/바디)                                                                                           | 비고                                 |
+| :--------- | :------------------------- | :------- | :---------------------------- | :---------: | :--------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- | :----------------------------------- |
+| **Auth**   | 회원가입                   | `POST`   | `/api/auth/signup`            |      X      | [Body] {"email":"", "password":"", "name":"", "avatar":""}       | 201 CreatedUser 객체 전체                                                                                      | 이메일 중복 시 예외 처리             |
+| **Auth**   | 로그인                     | `POST`   | `/api/auth/login`             |      X      | [Body] {"email":"", "password":""}                               | 200 OK{"token":"", "id":1, "email":...}                                                                        | JWT 토큰 발급                        |
+| **Book**   | 도서 목록 / 검색           | `GET`    | `/api/books`                  |      X      | [Query] page, size, sort, keyword                                | 200 OKPageResponseDto<BookResponseDto>                                                                         | 페이징 및 키워드 검색 통합           |
+| **Book**   | 도서 상세 조회             | `GET`    | `/api/books/{id}`             |      X      | [Path] id (도서 고유 ID)                                         | 200 OKBookResponseDto                                                                                          | 특정 도서 정보 반환                  |
+| **Book**   | 신규 도서 등록             | `POST`   | `/api/books`                  |      O      | [Body] {"title":"", "author":"", "isbn13":"", ...}               | 201 Created{"id":1, "message":"Successfully created"}<br>필수값(title, author, isbn13) 누락 시 400 Bad Request | Header에 Location URI 반환           |
+| **Book**   | 도서 정보 수정 (대출/반납) | `PATCH`  | `/api/books/{id}`             |      X      | [Body] {"isAvailable":false, "borrowerId":2, ...} 등 수정할 필드 | 200 OKBookResponseDto                                                                                          | 프론트엔드 대출/반납 처리용 범용 API |
+| **Book**   | 도서 삭제                  | `DELETE` | `/api/books/{id}`             |      O      | [Path] id                                                        | 204 No Content<br>성공적으로 삭제 시 응답 바디 없음. 권한 없을 시 403 Forbidden                                | 등록자 본인만 삭제 가능              |
+| **Book**   | AI 표지 업데이트           | `PATCH`  | `/api/books/{id}/cover`       |      O      | [Body] {"coverDataUrl": "data:image/..."}                        | 200 OK{"id":1, "thumbnail":"..."}                                                                              | Base64 URL 썸네일 업데이트           |
+| **Book**   | ISBN 중복 확인             | `GET`    | `/api/books/check-isbn`       |      X      | [Query] isbn13                                                   | 200 OKtrue 또는 false                                                                                          |                                      |
+| **Book**   | 유저 등록 도서 목록        | `GET`    | `/api/books/user/{userId}`    |      X      | [Path] userId[Query] page, size                                  | 200 OKPageResponseDto<BookResponseDto>                                                                         | 마이페이지용                         |
+| **Book**   | 인기 도서 랭킹             | `GET`    | `/api/books/ranking`          |      X      | -                                                                | 200 OKList<BookResponseDto>                                                                                    | 좋아요 수가 많은 상위 10개           |
+| **Like**   | 좋아요 추가                | `POST`   | `/api/books/{bookId}/like`    |      O      | [Path] bookId                                                    | 200 OK                                                                                                         | 사용자 토큰 기반 등록                |
+| **Like**   | 좋아요 취소                | `DELETE` | `/api/books/{bookId}/like`    |      O      | [Path] bookId                                                    | 200 OK                                                                                                         | 사용자 토큰 기반 삭제                |
+| **Like**   | 좋아요 상태 조회           | `GET`    | `/api/books/{bookId}/like`    |      O      | [Path] bookId                                                    | 200 OK{"liked":true, "likeCount":5}                                                                            | 토글 버튼 UI 렌더링용                |
+| **Like**   | 내 좋아요 도서 목록        | `GET`    | `/api/books/liked`            |      O      | -                                                                | 200 OKList<Book>                                                                                               | 마이페이지 찜 목록                   |
+| **Search** | 최근 검색 기록 조회        | `GET`    | `/api/search-history`         |      X      | [Query] userId                                                   | 200 OKList<SearchHistoryResponseDto>                                                                           | 최신순 정렬                          |
+| **Search** | 검색 기록 저장             | `POST`   | `/api/search-history`         |      X      | [Body] {"userId":1, "keyword":"검색어"}                          | 200 OKSearchHistoryResponseDto                                                                                 |                                      |
+| **Search** | 검색 기록 전체 삭제        | `DELETE` | `/api/search-history`         |      X      | [Query] userId                                                   | 200 OK"사용자 검색 기록 전체 삭제 완료..."                                                                     |                                      |
+| **Search** | 특정 검색 기록 삭제        | `DELETE` | `/api/search-history/keyword` |      X      | [Query] userId, keyword                                          | 200 OK"사용자 검색 기록 {keyword} 삭제 완료"                                                                   |                                      |
+
+## 🚀 6. 시작하기 (Getting Started)
 
 프로젝트를 로컬 컴퓨터에서 정상 실행하기 위한 단계별 개발 서버 구축 방법입니다.
 
-### 4-1. 사전 준비 (Prerequisites)
+### 6-1. 사전 준비 (Prerequisites)
 
 - **Java:** JDK 17 이상 설치
 - **Node.js:** v18 이상 설치
@@ -138,7 +241,7 @@
 
 ---
 
-### 4-2. 백엔드 서버 설정 및 실행 (`library_5th_miniproject_backend`)
+### 6-2. 백엔드 서버 설정 및 실행 (`library_5th_miniproject_backend`)
 
 1. **환경 변수 파일 생성:**
    백엔드 프로젝트 루트 경로에 `.env` 파일을 생성하고 데이터베이스 접속 정보를 설정합니다.
@@ -168,7 +271,7 @@
 
 ---
 
-### 4-3. 프론트엔드 웹 앱 설정 및 실행 (`Library_Aivle_5th`)
+### 6-3. 프론트엔드 웹 앱 설정 및 실행 (`Library_Aivle_5th`)
 
 1. **의존성 설치:**
    프론트엔드 루트 폴더에서 패키지를 설치합니다.
@@ -187,6 +290,7 @@
    ```
 
 3. **개발 서버 구동:**
+
    ```bash
    npm run dev
    ```
@@ -195,7 +299,7 @@
 
 ---
 
-## ☁️ 5. 배포 및 인프라 구성 (Deployment in Render)
+## ☁️ 7. 배포 및 인프라 구성 (Deployment in Render)
 
 본 프로젝트를 클라우드 배포 플랫폼(Render 등)에 지속적 배포(CD)할 경우 아래와 같이 배포 환경을 설정할 수 있습니다.
 
@@ -216,7 +320,7 @@
 
 ---
 
-## 📁 6. 프로젝트 디렉토리 구조 (Structure)
+## 📁 8. 프로젝트 디렉토리 구조 (Structure)
 
 전체 프로젝트 구조 및 핵심 파일 현황입니다.
 
@@ -265,7 +369,129 @@
 
 ---
 
-## 💡 7. 향후 고도화 계획 (Future Roadmap)
+## 📌 9. 개발 진행 사항 및 미션 체크리스트
+
+#### **[1일차 진행 사항: 기본 아키텍처 및 CRUD 구현]**
+
+- [x] **[Domain] Spring Initializr -> com.aivle.bookapp + Book Entity**: 스프링 부트 프로젝트 초기 설정 및 도서 정보 매핑을 위한 JPA 엔티티 구축 완료
+- [x] **[Repository] BookRepository 생성**: Spring Data JPA 기반의 데이터 처리 인터페이스 선언 완료
+- [x] **[Service] BookService 골격**: 도서 비즈니스 로직 처리를 위한 서비스 클래스 골격 설계 완료
+- [x] **[Controller] BookController 골격**: API 엔드포인트 선언 및 의존성 주입 구조 완성 완료
+- [x] **[통합] WebConfig(CORS) + application.yml - 2일차 연동 대비**: 프론트엔드 포트(3000) 접근 허용을 위한 CORS 설정 및 H2/MySQL 데이터베이스 프로필 환경 구성 완료
+- [x] **Git 저장소 생성 및 초기 커밋**: 프로젝트 소스 버전 관리 구동 및 모든 계층 컴파일 통과 완료
+- [x] **[Repository] 기본 CRUD 메서드 동작 검증 + H2 콘솔로 데이터 확인**: 로컬 테스트 환경을 통한 핵심 데이터 조작 및 영속성 작동 확인 완료
+- [x] **[Service] 목록조회, 상세조회 메서드 구현 - 생성자 주입 적용**: Lombok(`@RequiredArgsConstructor`)을 사용한 서비스 계층 내 생성자 주입 및 조회 메서드 완성 완료
+- [x] **[Controller] GET /books, GET /books/{id} 엔드포인트 완성**: 도서 검색/조회 API 구현 및 DTO 반환 처리 완료
+- [x] **[통합] Postman 테스트 -> Frontend 1차 연동**: 로컬에서 React 화면과 API 서버 간 통신 확인 및 연동 완료 (기존 API 엔드포인트를 8080 포트로 정상 전환)
+
+#### **[2일차 진행 사항: 예외 처리 및 CUD 심화]**
+
+- [x] **[Domain] Book Entity에 입력 검증 어노테이션 추가**: `@NotBlank`를 활용한 데이터 유효성 검사 도입 완료
+- [x] **[Service] 등록 / 부분 수정 / 삭제 메서드 구현**: 트랜잭션 단위 비즈니스 로직 작성 완료
+- [x] **[Controller] POST + 검증 / PATCH (부분수정) / DELETE**: `@Valid` 요청 필터 검증 및 데이터 조작 API 완성 완료
+- [x] **[통합] 풀스택 CRUD 동작 확인**: Postman을 활용한 예외 흐름 및 프론트 UI와의 양방향 CUD 동기화 연동 확인 완료
+- [x] **exception 패키지에 BookNotFoundException 클래스 생성**: 존재하지 않는 도서 탐색 시 발생하는 커스텀 런타임 예외 구현 완료
+- [x] **BookService의 상세 조회 메서드에 예외 발생 로직 추가**: 도서가 없을 시 `BookNotFoundException`을 명시적으로 던지도록 수정 완료
+- [x] **BookService CUD 메서드에 @Transactional 적용**: 데이터 무결성을 위한 쓰기 트랜잭션 보장 완료
+- [x] **BookService 조회 메서드에 @Transactional(readOnly = true) 적용**: 조회 성능 최적화 및 더티 체킹 배제 완료
+- [x] **[통합] 전역 예외 처리 클래스 작성 (`GlobalExceptionHandler`)**: `@RestControllerAdvice`를 이용한 모든 컨트롤러 예외 일관 정제 완료
+  - [x] 도서 없음 -> `404 Not Found` 응답으로 정제 완료
+  - [x] 검증 실패 -> `400 Bad Request` 응답으로 정제 완료
+- [x] **Postman + React 화면에서 예외 시나리오 전체 확인**: 잘못된 요청 시 프론트 브라우저 알림창으로 메시지가 노출되는 예외 흐름 연동 완료
+
+#### **[3일차 진행 사항: AI 기능 결합 및 권한 검증 고도화]**
+
+- [x] **[Backend] 표지 URL 저장용 엔드포인트 추가 (PATCH /books/{id}/cover)**: 인공지능 표지 이미지 저장을 위한 경로 제공 완료
+- [x] **[Backend] BookService에 표지 URL 업데이트 메서드 추가**: `updateCover(Long id, String coverDataUrl, String userEmail)` 구현 완료
+- [x] **[Frontend] OpenAI 직접 호출**: 학습 코드 활용 및 DALL-E 표지 이미지 생성 모듈 연동 완료
+- [x] **React -> OpenAI -> React -> Backend 저장 흐름 검증**: 표지 자동 생성 후 로컬 파일 및 URL 저장 완료
+- [x] **도서 등록자 권한 검증 기능 구현**: 타인의 도서 무단 삭제 및 표지 수정을 방지하기 위해 `@AuthenticationPrincipal UserDetails`를 기반으로 등록 사용자 이메일 일치 여부 확인 로직 추가 완료
+- [x] **레거시 데이터 널 가드(NPE Guard) 도입**: `user_id`가 누락된 도서의 삭제/수정 시 NullPointerException이 발생하지 않도록 방어 코드 추가 및 수동 등록 시 `isbn13` 검증 검사 우회 처리 완료
+
+---
+
+## 🛠️ 10. 프로젝트 주요 트러블슈팅 정리 (Troubleshooting Log)
+
+본 섹션은 프로젝트 진행 및 배포 과정에서 발생한 주요 장애 및 설계 결함 사항과 이를 해결한 과정을 기록한 내용입니다.
+
+### 10-1. Render 배포 시 Java 런타임 미지원 문제
+
+- **관련 커밋**: `96e028d` (Backend) - _CICD - Docker 로 전환 / 사유 : Render 에서 Java를 지원하지 않아서 Docker 컨테이너화 진행 후 적용_
+- **이슈**: 백엔드(Spring Boot) 서버를 Render로 CD(지속적 배포)하고자 했으나 빌드 에러 및 배포 실패 발생.
+- **원인**: Render 클라우드 플랫폼의 기본 제공 언어 목록(Node.js, Python, Go, Rust 등)에 Java/Spring Boot 런타임이 기본적으로 부재함.
+- **해결**:
+  - 프로젝트 루트 경로에 멀티스테이지 빌드를 활용한 [Dockerfile](file:///c:/Users/User/library_5th_miniproject_backend/Dockerfile)을 구축함.
+  - 1단계에서 JDK 17 기반으로 Gradle 빌드를 돌려 `.jar` 패키지를 추출하고, 2단계에서 경량 JRE 17 이미지를 통해 컨테이너 형태로 실행되도록 배포 파이프라인을 전환함.
+
+---
+
+### 10-2. AI 생성 표지 이미지 휘발 및 404 에러
+
+- **관련 커밋**: `8a970c5` (Frontend) - _base64로 변경 , 사유: 배포환경에서는 직접 저장이 불가능함._
+- **이슈**: AI가 생성한 책 표지 이미지가 잘 동작하다가, 일정 시간 뒤 또는 새로운 배포(CI/CD) 이후 서버에서 삭제되어 `404 Not Found` 에러와 함께 엑박이 뜨는 현상 발생.
+- **원인**:
+  - 로컬 개발 환경의 작동 방식을 그대로 차용하여, Next.js 프론트 서버 디렉토리 내부(`public/covers`)에 동적으로 파일 쓰기(`fs.writeFileSync`)를 수행하고 DB에는 상대 경로 주소만 저장함.
+  - Render 플랫폼의 컨테이너 디스크는 서버가 재가동되거나 새 버전 배포 시 원래 이미지 상태로 리셋되는 **휘발성 파일 시스템(Ephemeral File System)**을 채택하기 때문에 디렉토리가 초기화됨.
+- **해결**:
+  - 프론트엔드 API 라우트(`app/api/genthum/route.ts`)에서 파일을 로컬 디스크에 쓰는 로직을 전면 제거함.
+  - 생성된 이미지 바이트 데이터를 **Base64 Data URL**(`data:image/png;base64,...`) 형식의 텍스트 데이터로 변환하여 백엔드로 즉시 넘겨주도록 변경함.
+  - 백엔드는 기존 `LONGTEXT` 타입의 `thumbnail` 컬럼에 이를 그대로 수용하도록 하여, **Aiven MySQL DB 내에 이미지 정보를 영구 보존**하고 프론트에서는 디스크 접근 없이 화면에 렌더링되도록 수정함.
+
+---
+
+### 10-3. 도서 삭제 시 NullPointerException 및 권한 검증 차단 문제 (유령 도서)
+
+- **관련 커밋**: `c9713c1` (Backend) - _도서 nullguard 코드 적용... 타인의 도서만 삭제못하게 401을 반환하게하고 그 외의 유령도서의경우 삭제 가능하도록 널가드 적용_
+- **이슈**: 데이터가 정상 기입되지 않았거나, 도서 등록 사용자 정보(`user_id`)가 DB 상에서 `Null`로 비어 있는 '유령 도서'에 대해 삭제 요청을 보낼 시 500 에러(NullPointerException)가 발생하고 처리가 제한됨.
+- **원인**:
+  - `BookService.java`의 삭제 로직 내부 권한 검증 부분(`book.getUser().getEmail().equals(userEmail)`)에서 `book.getUser()`가 `Null` 상태일 때 이메일을 역참조하려다 널 포인터 에러가 발생함.
+- **해결**:
+  - 권한 검증 조건문 앞에 유저 객체에 대한 널가드(Null Guard)를 추가함:
+    ```java
+    if (book.getUser() != null && !book.getUser().getEmail().equals(userEmail)) {
+        throw new UnauthorizedAccessException();
+    }
+    ```
+  - 유저 정보가 정상 등록된 상태에서 이메일이 다를 때만 삭제 권한을 차단(401 Unauthorized)하고, 유저 정보가 누락된 유령 도서는 예외를 내뱉지 않고 정상 삭제(204 No Content)되도록 구조적 안정성을 확보함.
+
+---
+
+### 10-4. 데이터베이스 및 외부 API Key 민감 정보 저장소 노출 문제
+
+- **관련 커밋**: `6c84527`, `69c97fe` (Backend) - _.env 제거 / env제거_
+- **이슈**: 로컬 데이터베이스 커넥션 패스워드 및 외부 서비스 API 토큰 키가 보관된 `.env` 파일이 Git 추적 필터링에서 누락되어 퍼블릭 GitHub 저장소에 그대로 push됨.
+- **원인**: `.gitignore`에 `.env` 파일 누락 및 캐시 등록으로 인한 자동 커밋 유도.
+- **해결**:
+  - Git 캐시에서 `.env` 파일을 영구 삭제하고 `.gitignore` 규칙 파일에 명시적으로 추가함.
+  - 배포 클라우드(Render)에서는 대시보드 내 **Secret Files**에 파일 내용을 이식하거나, **Environment Variables**로 각 변수(MYSQL_URL 등)를 개별 관리하도록 이전하여 자격 증명 보안을 강화함.
+
+---
+
+### 10-5. 알라딘 API 통신 거부 및 AI 요약 연동 실패
+
+- **관련 커밋**: `e8b625a` (Frontend) - _AI 요약 및 알라딘 접속불가문제 해결 1. https -> http 2. solar 모델에서 4o로 변경_
+- **이슈**: 신규 도서 등록을 위해 외부 서비스인 알라딘 API를 호출하여 도서 정보를 수집하려 했으나 연결 오류 발생 및 AI 도서 요약 기능이 마비되는 현상 발생.
+- **원인**:
+  - 알라딘 오픈 API의 통신 프로토콜 지원 스펙 문제(HTTPS 요청을 거부하는 현상).
+  - 기존 AI 요약 연동에 사용되던 Solar LLM 모델의 성능 불일치 혹은 API 사용 연동 이슈.
+- **해결**:
+  - 프론트엔드의 알라딘 API 엔드포인트 URL 요청을 `https://...`에서 `http://...` 프로토콜로 우회하여 통신을 성공시킴.
+  - 요약 품질 개선 및 신뢰도를 높이기 위해 활용 LLM 모델을 `Solar`에서 `gpt-4o` 모델로 전면 전환함.
+
+---
+
+## 📝 11. 최종 확인 및 점검 사항 (수동 검증 필요 영역)
+
+아래 항목들은 사용자 환경(서버 키, 배포 환경 및 파일 시스템 등)에 의존하거나 로컬 개발자가 직접 실시간 구동 화면에서 최종적으로 더블 체크해야 하는 확인 사항입니다.
+
+- [x] **Postman API 실시간 호출 테스트 캡처 파일 백업**: 로컬 환경에서 개별 API에 대한 성공/실패 응답 캡처 파일 및 JSON 히스토리가 정확히 기록되어 있는지 확인
+- [x] **OpenAI API Key 환경 변수 유출 방지 검사**: GitHub 등 퍼블릭 저장소에 OpenAI API Key가 하드코딩되거나 유출되지 않았는지 수동 검증 및 환경 변수(`.env.local`) 분리 적용 확인
+- [x] **실제 클라우드 배포(Aiven MySQL + Render) 가동 상태 검증**: 로컬 환경을 벗어나 실제 배포 인프라 상에서 CORS 예외, HTTPS 인증서 에러 및 JWT 파싱 상태 수동 가동 테스트
+- [x] **Spring Security 토큰 만료 가드 체크**: 만료된 토큰을 전송했을 때 HTTP Status 401 및 프론트엔드 인터셉터에 의한 자동 로그아웃 및 홈 리다이렉트 흐름의 실동작 확인
+
+---
+
+## 💡 12. 향후 고도화 계획 (Future Roadmap)
 
 1. **상세 대출/반납 히스토리:** 단일 Boolean 토글을 넘어, 대출 시작일, 반납 예정일, 과거 대출 이력 등을 트래킹할 수 있는 다중 대출 이력 테이블 추가.
 2. **AI 독서 비서 확장:** AI 리뷰 요약 기능 외에도, 사용자의 평소 읽는 카테고리를 분석하여 어울리는 도서를 챗봇 형식으로 자동 추천해 주는 기능 설계.
