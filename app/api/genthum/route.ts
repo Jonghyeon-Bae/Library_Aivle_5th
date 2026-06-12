@@ -54,21 +54,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '생성된 이미지 데이터 형식을 찾을 수 없습니다.' }, { status: 500 });
     }
 
-    // public/covers 폴더 생성
-    const publicCoversDir = path.join(process.cwd(), 'public', 'covers');
-    if (!fs.existsSync(publicCoversDir)) {
-      fs.mkdirSync(publicCoversDir, { recursive: true });
-    }
+    // Render 배포 환경(휘발성 디스크)에서도 유실되지 않도록 이미지를 Base64 Data URL로 변환하여 반환
+    const base64Url = `data:image/png;base64,${buffer.toString('base64')}`;
 
-    // 도서 고유 ID를 파일명으로 사용하여 저장 (기존 이미지 덮어쓰기하여 파일 누적 방지)
-    const fileName = `${fileId}.png`;
-    const filePath = path.join(publicCoversDir, fileName);
-    fs.writeFileSync(filePath, buffer);
-
-    // AGENTS.md 룰에 따라 절대 경로가 아닌 상대 경로(/covers/파일명.png) 형태로 반환 (캐시 버스팅 포함)
-    const relativeUrl = `/covers/${fileName}?t=${Date.now()}`;
-
-    return NextResponse.json({ url: relativeUrl });
+    return NextResponse.json({ url: base64Url });
   } catch (error: unknown) {
     let errorMessage = '알 수 없는 오류가 발생했습니다.';
     if (axios.isAxiosError(error)) {
