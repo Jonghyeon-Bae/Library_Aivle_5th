@@ -39,10 +39,10 @@ export default function IllegalBanners() {
     },
     {
       id: 10,
-      title: '🛌 [DX전용] 꿀잼(?) 강의 무료 체험',
+      title: '🛌 [AI트랙전용] 꿀잼(?) 코테 무료 체험',
       badge: '졸음퇴치',
-      description: '듣기만 해도 잠이 확 달아나는 리얼 DX 프로젝트 트레이닝!',
-      alertMsg: '🛌 [DX 실습실] 졸음 방지 시스템 가동! 강사님의 레이저 눈빛이 당신을 응시합니다. 자면 코딩 테스트 100줄 추가!',
+      description: '문제보기만 해도 잠이 확 달아나는 리얼 AI 코딩 테스트!',
+      alertMsg: '🛌 [AI 실습실] 졸음 방지 시스템 가동! 매니저님의 레이저 눈빛이 당신을 응시합니다. 자면 코딩 테스트 10문제 추가!',
       styleType: 'rainbow',
       icon: <BookOpen size={16} />,
     },
